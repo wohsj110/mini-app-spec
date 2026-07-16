@@ -240,7 +240,7 @@ ID 格式：`SRC-* / FLOW-* / ST-* / TR-* / REQ-* / SCN-* / EX-* / ISS-* / ANN-*
 | STR | 01 JSON 可解析且转义安全；02 必填字段；03 ID 格式；04 ID 唯一；05 数据块/template id 唯一；06 高 major 版本 ⇒ blocked |
 | REF | 01 一切 *Ref/*Refs 可解析；02 孤儿 template（无 state 引用）error |
 | FSM | 01-06 见 §4.1 |
-| ALG | 01 派生状态落盘；02 behavior requirement 未覆盖且无 waiver；03 waiver 结构不全；04 result=passed 的 run evidence 为空或文件缺失/hash 不符（文件核验在 `--strict`）；05 assert run 缺 testCount 或 =0 |
+| ALG | 01 派生状态落盘；02 behavior requirement 未覆盖且无 waiver；03 waiver 结构不全；04 result=passed 的 run evidence 为空或文件缺失/hash 不符（文件核验在 `--strict`，且只核验**适用** run——historical run 的证据随产物演进合法漂移，不再复核 hash）；05 assert run 缺 testCount 或 =0 |
 | ACC | 01-06 见 §6.6 |
 | LED | 01 db/device run 缺设备上下文；02 run 缺 fingerprint/verificationHash |
 | TPL | 01 allowlist 违规；02 data-go 非法；03 img data URI 违规 |

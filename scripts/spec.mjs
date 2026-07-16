@@ -250,7 +250,9 @@ export function validateData(data, opts = {}) {
   for (const r of l.runs ?? []) {
     const scn = scnOf(r.scenarioRef);
     if (r.result === 'passed' && (!Array.isArray(r.evidence) || r.evidence.length === 0)) out.push(F('ALG-04', r.id, 'passed run 证据为空'));
-    if (opts.strict && r.result === 'passed') for (const ev of r.evidence ?? []) {
+    // strict 的证据文件核验只针对「适用」run（fingerprint+vh 与当前场景一致）；historical run 仅展示、不参与推导，其证据随产物演进合法漂移
+    const rApplicable = scn && r.scenarioFingerprint === fingerprintOf(scn) && r.verificationHash === verificationHashOf(scn.verification ?? {});
+    if (opts.strict && r.result === 'passed' && rApplicable) for (const ev of r.evidence ?? []) {
       const p = path.resolve(opts.repoRoot ?? '.', ev.path);
       if (!fs.existsSync(p)) out.push(F('ALG-04', r.id, `证据文件不存在：${ev.path}`));
       else if (ev.sha256 && sha256hex(fs.readFileSync(p)) !== ev.sha256) out.push(F('ALG-04', r.id, `证据 hash 不符：${ev.path}`));

@@ -163,7 +163,7 @@ body.hidenotes .stage .notepin{display:none}
 </head>
 <body>
 <div id="app"></div>
-<script id="mini-app-engine" data-engine-version="0.13.0">
+<script id="mini-app-engine" data-engine-version="0.13.1">
 (function () {
   'use strict';
   const readJson = (id) => { const el = document.getElementById(id); return el ? JSON.parse(el.textContent) : null; };
@@ -429,7 +429,7 @@ body.hidenotes .stage .notepin{display:none}
     if (tplId && stageCache.tpl === tplId && stageCache.el) {
       stage = stageCache.el; // 单流单屏：同模板不重建——控件值、图层、快照全保留，状态切换只显隐区域
     } else {
-      const stage = h('div', { class: 'stage' });
+      stage = h('div', { class: 'stage' });
       stage.appendChild(h('div', { class: 'statusbar' }, h('span', { text: '9:41' }), h('span', { text: '5G ▦ ▂▄▆' })));
       const tpl = st && document.getElementById(st.uiTemplateRef);
       if (tpl) stage.appendChild(tpl.content.cloneNode(true));

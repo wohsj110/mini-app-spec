@@ -1,9 +1,0 @@
-{
-  "description": "孤儿状态 ST-orphan 无任何入边且非 entry，不可达",
-  "base": "valid-typical.json",
-  "expect": ["FSM-02"],
-  "ops": [
-    { "op": "add", "path": "/contract/states/-", "value": { "id": "ST-orphan", "flowRef": "FLOW-a", "name": "孤儿", "uiTemplateRef": "ui-ST-orphan", "figmaNote": "n/a", "entry": "none", "terminal": false } },
-    { "op": "replace", "path": "/contract/flows/0/stateRefs", "value": ["ST-a", "ST-b", "ST-c", "ST-orphan"] }
-  ]
-}

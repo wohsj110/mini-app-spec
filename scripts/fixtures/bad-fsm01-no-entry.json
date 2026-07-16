@@ -1,8 +1,0 @@
-{
-  "description": "唯一状态 entry=none，flow 无入口",
-  "base": "valid-minimal.json",
-  "expect": ["FSM-01"],
-  "ops": [
-    { "op": "replace", "path": "/contract/states/0/entry", "value": "none" }
-  ]
-}

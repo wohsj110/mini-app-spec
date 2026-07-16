@@ -1,8 +1,0 @@
-{
-  "description": "scenario 落盘手写派生状态 status:\"passed\"",
-  "base": "valid-minimal.json",
-  "expect": ["ALG-01"],
-  "ops": [
-    { "op": "add", "path": "/contract/scenarios/0/status", "value": "passed" }
-  ]
-}

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Mini-App Spec"
-  short_description: "创建、校准、批注并对账自包含的单文件可执行 Mini-App 规格"
-  default_prompt: "使用 $mini-app-spec 根据现有输入创建、校准、批注或对账自包含的单文件可执行规格。"

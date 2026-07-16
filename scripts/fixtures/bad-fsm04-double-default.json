@@ -1,8 +1,0 @@
-{
-  "description": "ST-b 两条无 guard 出边同时 isDefault=true（TR-2 与新增 TR-alt）",
-  "base": "valid-typical.json",
-  "expect": ["FSM-04"],
-  "ops": [
-    { "op": "add", "path": "/contract/transitions/-", "value": { "id": "TR-alt", "flowRef": "FLOW-a", "from": "ST-b", "to": "ST-c", "trigger": "备用完成", "result": "展示结果", "isDefault": true, "guard": null, "scenarioRefs": [] } }
-  ]
-}

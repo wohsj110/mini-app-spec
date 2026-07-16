@@ -1,8 +1,0 @@
-{
-  "description": "result=passed 的 run 证据列表为空",
-  "base": "valid-typical.json",
-  "expect": ["ALG-04"],
-  "ops": [
-    { "op": "replace", "path": "/ledger/runs/0/evidence", "value": [] }
-  ]
-}

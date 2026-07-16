@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,128 +8,254 @@
 <style>
   :root {
     --bg: #0b0e14; --bg2: #10141d; --panel: #151a26; --panel2: #1a2130;
-    --line: #232b3d; --txt: #e6ebf4; --dim: #8b95a9; --dimmer: #5b6478;
+    --line: #232b3d; --txt: #e6ebf4; --dim: #97a1b5; --dimmer: #5b6478;
     --acc: #5eead4; --acc2: #818cf8; --warn: #fbbf24; --red: #f87171; --green: #4ade80;
     --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; animation: none !important; } }
   body { background: var(--bg); color: var(--txt); font: 16px/1.7 -apple-system, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; }
   body::before { content:""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-    background: radial-gradient(60rem 30rem at 80% -10%, rgba(129,140,248,.14), transparent 60%),
+    background: radial-gradient(60rem 30rem at 80% -10%, rgba(129,140,248,.15), transparent 60%),
                 radial-gradient(50rem 28rem at 10% 0%, rgba(94,234,212,.10), transparent 55%); }
   main, nav, footer { position: relative; z-index: 1; }
-  .wrap { max-width: 62rem; margin: 0 auto; padding: 0 1.4rem; }
-  nav { position: sticky; top: 0; backdrop-filter: blur(12px); background: rgba(11,14,20,.8); border-bottom: 1px solid var(--line); }
-  nav .wrap { display: flex; align-items: center; gap: 1rem; height: 3.4rem; }
-  nav .logo { font-weight: 700; letter-spacing: .02em; }
+  .wrap { max-width: 68rem; margin: 0 auto; padding: 0 1.4rem; }
+  a { color: var(--acc); }
+  button, a { cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; border-radius: .3rem; }
+  .ic { width: 1.15em; height: 1.15em; vertical-align: -0.2em; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+  nav { position: sticky; top: 0; z-index: 5; backdrop-filter: blur(12px); background: rgba(11,14,20,.82); border-bottom: 1px solid var(--line); }
+  nav .wrap { display: flex; align-items: center; gap: 1.1rem; height: 3.4rem; }
+  nav .logo { font-weight: 700; letter-spacing: .02em; color: var(--txt); text-decoration: none; }
   nav .logo em { color: var(--acc); font-style: normal; }
   nav .sp { flex: 1; }
-  nav a { color: var(--dim); text-decoration: none; font-size: .88rem; }
-  nav a:hover { color: var(--txt); }
-  .lang-btn { background: var(--panel); border: 1px solid var(--line); color: var(--txt); border-radius: .5rem;
-    padding: .3rem .8rem; cursor: pointer; font-size: .85rem; }
+  nav a.nl { color: var(--dim); text-decoration: none; font-size: .88rem; transition: color .2s; }
+  nav a.nl:hover { color: var(--txt); }
+  .lang-btn { background: var(--panel); border: 1px solid var(--line); color: var(--txt); border-radius: .5rem; padding: .3rem .8rem; font-size: .85rem; transition: border-color .2s; }
   .lang-btn:hover { border-color: var(--acc); }
-  header.hero { padding: 5rem 0 3.5rem; text-align: center; }
-  .hero h1 { font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1.2; font-weight: 800; }
+  @media (max-width: 720px) { nav a.nl { display: none; } }
+
+  header.hero { padding: 4.5rem 0 3rem; text-align: center; }
+  .hero h1 { font-size: clamp(2rem, 5vw, 3.3rem); line-height: 1.18; font-weight: 800; letter-spacing: -.01em; }
   .hero h1 .g { background: linear-gradient(90deg, var(--acc), var(--acc2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .hero p.sub { color: var(--dim); max-width: 44rem; margin: 1.2rem auto 0; font-size: 1.05rem; }
-  .install { margin: 2.2rem auto 0; max-width: 34rem; display: flex; align-items: center; gap: .6rem;
-    background: var(--panel); border: 1px solid var(--line); border-radius: .8rem; padding: .8rem 1rem; font-family: var(--mono); font-size: .95rem; }
+  .hero p.sub { color: var(--dim); max-width: 46rem; margin: 1.2rem auto 0; font-size: 1.06rem; }
+  .install { margin: 2rem auto 0; max-width: 30rem; display: flex; align-items: center; gap: .6rem;
+    background: var(--panel); border: 1px solid var(--line); border-radius: .8rem; padding: .75rem 1rem; font-family: var(--mono); font-size: .95rem; }
   .install .dollar { color: var(--dimmer); }
   .install code { flex: 1; text-align: left; color: var(--acc); overflow-x: auto; white-space: nowrap; }
-  .install button { background: var(--panel2); color: var(--txt); border: 1px solid var(--line); border-radius: .5rem;
-    padding: .35rem .7rem; cursor: pointer; font-size: .8rem; flex-shrink: 0; }
+  .install button { background: var(--panel2); color: var(--txt); border: 1px solid var(--line); border-radius: .5rem; padding: .35rem .75rem; font-size: .8rem; flex-shrink: 0; transition: border-color .2s; }
   .install button:hover { border-color: var(--acc); }
-  .hero .links { margin-top: 1.4rem; display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
-  .hero .links a { color: var(--dim); font-size: .88rem; text-decoration: none; border: 1px solid var(--line);
-    border-radius: 2rem; padding: .35rem 1rem; }
-  .hero .links a:hover { color: var(--txt); border-color: var(--acc); }
-  section { padding: 3rem 0; border-top: 1px solid var(--line); }
-  h2 { font-size: 1.5rem; margin-bottom: .4rem; }
-  h2 .tag { color: var(--acc); font-family: var(--mono); font-size: .8rem; display: block; margin-bottom: .4rem; letter-spacing: .1em; text-transform: uppercase; }
-  .lead { color: var(--dim); max-width: 46rem; margin-bottom: 1.6rem; }
-  .lead a { color: var(--acc); }
+  .hero .cta-row { margin-top: 1.5rem; display: flex; justify-content: center; gap: .8rem; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: .5rem; border-radius: .7rem; padding: .6rem 1.3rem; font-size: .95rem; font-weight: 600; text-decoration: none; border: 1px solid var(--line); transition: transform .2s, border-color .2s, background .2s; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary { background: linear-gradient(90deg, rgba(94,234,212,.16), rgba(129,140,248,.16)); border-color: rgba(94,234,212,.45); color: var(--txt); }
+  .btn-primary:hover { border-color: var(--acc); }
+  .btn-ghost { color: var(--dim); }
+  .btn-ghost:hover { color: var(--txt); border-color: var(--dimmer); }
+  .hero .shot { margin: 2.6rem auto 0; max-width: 62rem; }
+
+  .browser { border: 1px solid var(--line); border-radius: .9rem; overflow: hidden; background: var(--bg2); box-shadow: 0 24px 60px -28px rgba(0,0,0,.7); }
+  .browser .bar { display: flex; align-items: center; gap: .4rem; padding: .55rem .8rem; border-bottom: 1px solid var(--line); background: var(--panel); }
+  .browser .bar i { width: .65rem; height: .65rem; border-radius: 50%; background: var(--line); }
+  .browser .bar i:nth-child(1) { background: #f87171aa; } .browser .bar i:nth-child(2) { background: #fbbf24aa; } .browser .bar i:nth-child(3) { background: #4ade80aa; }
+  .browser .bar span { margin-left: .5rem; color: var(--dimmer); font-size: .72rem; font-family: var(--mono); }
+  .browser img { display: block; width: 100%; height: auto; }
+
+  section { padding: 3.4rem 0; border-top: 1px solid var(--line); }
+  h2 { font-size: 1.55rem; margin-bottom: .4rem; letter-spacing: -.01em; }
+  .tag { color: var(--acc); font-family: var(--mono); font-size: .78rem; display: block; margin-bottom: .5rem; letter-spacing: .12em; text-transform: uppercase; }
+  .lead { color: var(--dim); max-width: 48rem; margin-bottom: 1.6rem; }
   .grid { display: grid; gap: 1rem; }
   .g2 { grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: .9rem; padding: 1.2rem 1.3rem; }
-  .card h3 { font-size: 1rem; margin-bottom: .4rem; }
-  .card h3 .n { color: var(--acc2); font-family: var(--mono); margin-right: .5rem; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: .9rem; padding: 1.2rem 1.3rem; transition: border-color .2s; }
+  .card:hover { border-color: #2f3a52; }
+  .card h3 { font-size: 1rem; margin-bottom: .45rem; display: flex; align-items: center; gap: .55rem; }
+  .card h3 .ic { color: var(--acc); flex-shrink: 0; }
+  .card h3 .n { color: var(--acc2); font-family: var(--mono); }
   .card p { color: var(--dim); font-size: .9rem; }
-  pre.diagram { background: var(--bg2); border: 1px solid var(--line); border-radius: .9rem; padding: 1.2rem 1.4rem;
-    font-family: var(--mono); font-size: .82rem; line-height: 1.75; overflow-x: auto; color: var(--dim); }
+  td code, .card code, p code, li code { font-family: var(--mono); font-size: .84em; background: var(--panel2); border: 1px solid var(--line); border-radius: .3rem; padding: .08rem .35rem; color: var(--acc); white-space: nowrap; }
+
+  .feature { display: grid; grid-template-columns: 5fr 7fr; gap: 2.4rem; align-items: center; padding: 2.6rem 0; }
+  .feature.rev { grid-template-columns: 7fr 5fr; }
+  .feature.rev .ftext { order: 2; } .feature.rev .fshot { order: 1; }
+  @media (max-width: 860px) { .feature, .feature.rev { grid-template-columns: 1fr; } .feature.rev .ftext { order: 1; } .feature.rev .fshot { order: 2; } }
+  .ftext h3 { font-size: 1.3rem; margin-bottom: .6rem; }
+  .ftext p { color: var(--dim); font-size: .95rem; margin-bottom: .7rem; }
+  .ftext ul { list-style: none; display: flex; flex-direction: column; gap: .45rem; }
+  .ftext li { color: var(--dim); font-size: .9rem; padding-left: 1.4rem; position: relative; }
+  .ftext li::before { content: ""; position: absolute; left: .2rem; top: .62em; width: .45rem; height: .45rem; border-radius: 50%; background: linear-gradient(90deg, var(--acc), var(--acc2)); }
+
+  pre.diagram { background: var(--bg2); border: 1px solid var(--line); border-radius: .9rem; padding: 1.2rem 1.4rem; font-family: var(--mono); font-size: .82rem; line-height: 1.75; overflow-x: auto; color: var(--dim); }
   pre.diagram b { color: var(--txt); font-weight: 600; }
-  pre.diagram .a { color: var(--acc); } pre.diagram .p { color: var(--acc2); }
-  pre.diagram .w { color: var(--warn); } pre.diagram .r { color: var(--red); }
-  table { width: 100%; border-collapse: collapse; font-size: .88rem; }
-  th, td { text-align: left; padding: .55rem .8rem; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { color: var(--dimmer); font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; }
-  td code, .card code, p code, li code { font-family: var(--mono); font-size: .84em; background: var(--panel2); border: 1px solid var(--line); border-radius: .3rem; padding: .08rem .35rem; color: var(--acc); }
+  pre.diagram .a { color: var(--acc); } pre.diagram .p { color: var(--acc2); } pre.diagram .w { color: var(--warn); } pre.diagram .r { color: var(--red); }
+  pre.forllm { background: var(--bg2); border: 1px solid var(--line); border-radius: .9rem; padding: 1.1rem 1.3rem; font-family: var(--mono); font-size: .8rem; line-height: 1.7; overflow-x: auto; color: var(--dim); white-space: pre; }
+
   .tbl-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: .9rem; background: var(--panel); }
-  .tbl-scroll table { min-width: 34rem; } .tbl-scroll td, .tbl-scroll th { border-bottom: 1px solid var(--line); }
-  .tbl-scroll tr:last-child td { border-bottom: none; }
+  table { width: 100%; border-collapse: collapse; font-size: .88rem; min-width: 34rem; }
+  th, td { text-align: left; padding: .55rem .9rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--dimmer); font-weight: 600; font-size: .76rem; text-transform: uppercase; letter-spacing: .06em; }
+  tr:last-child td { border-bottom: none; }
+
   footer { border-top: 1px solid var(--line); padding: 2.5rem 0 3rem; color: var(--dimmer); font-size: .85rem; text-align: center; }
   footer a { color: var(--dim); }
-  [data-l] { display: none; } html[data-lang="en"] [data-l="en"], html[data-lang="zh"] [data-l="zh"] { display: revert; }
+
+  [data-l] { display: none; }
+  html[data-lang="en"] [data-l="en"], html[data-lang="zh"] [data-l="zh"] { display: revert; }
   html[data-lang="en"] span[data-l="en"], html[data-lang="zh"] span[data-l="zh"] { display: inline; }
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-contract" viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M9 13h6M9 17h4"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+    <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6L4.8 18a2 2 0 0 0 1.8 3h10.8a2 2 0 0 0 1.8-3L14 9V3"/><path d="M7.5 14h9"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-5.1-7-11a7 7 0 0 1 14 0c0 5.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="i-git" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="9" r="2.5"/><path d="M6 8.5v7M8.4 6.6c4 1 7.2-.3 7.2 0"/><path d="M18 11.5c0 4-5 4.5-9 4.7"/></symbol>
+    <symbol id="i-calc" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8.5 7h7M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01"/></symbol>
+    <symbol id="i-run" viewBox="0 0 24 24"><polygon points="9 6 19 12 9 18 9 6"/><path d="M5 5v14"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-gh" viewBox="0 0 24 24"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></symbol>
+  </defs>
+</svg>
+
 <nav><div class="wrap">
-  <span class="logo">▣ mini-app-<em>spec</em></span>
+  <a class="logo" href="#top">▣ mini-app-<em>spec</em></a>
   <span class="sp"></span>
-  <a href="#arch"><span data-l="en">Architecture</span><span data-l="zh">架构</span></a>
-  <a href="#laws"><span data-l="en">Iron Laws</span><span data-l="zh">铁律</span></a>
-  <a href="#flow"><span data-l="en">Workflow</span><span data-l="zh">工作流</span></a>
-  <a href="#install"><span data-l="en">Install</span><span data-l="zh">安装</span></a>
-  <a href="https://github.com/wohsj110/mini-app-spec">GitHub</a>
-  <button class="lang-btn" onclick="toggleLang()"><span data-l="en">中文</span><span data-l="zh">EN</span></button>
+  <a class="nl" href="#tour"><span data-l="en">Product tour</span><span data-l="zh">产物长什么样</span></a>
+  <a class="nl" href="#arch"><span data-l="en">Architecture</span><span data-l="zh">架构</span></a>
+  <a class="nl" href="#laws"><span data-l="en">Iron laws</span><span data-l="zh">铁律</span></a>
+  <a class="nl" href="#install"><span data-l="en">Install</span><span data-l="zh">安装</span></a>
+  <a class="nl" href="https://github.com/wohsj110/mini-app-spec">GitHub</a>
+  <button class="lang-btn" onclick="toggleLang()" aria-label="Switch language"><span data-l="en">中文</span><span data-l="zh">EN</span></button>
 </div></nav>
 
-<main class="wrap">
+<main class="wrap" id="top">
 <header class="hero">
   <h1><span data-l="en">The spec <span class="g">is</span> a mini app.</span>
       <span data-l="zh">规格，本身就是一个 <span class="g">Mini App</span>。</span></h1>
-  <p class="sub" data-l="en">An agent skill that turns messy multi-source requirements (PRD / BDD / Figma / code) into a single self-contained <code>mini-app-spec.html</code> — machine contract, operable prototype, BDD acceptance, annotation loop, and verifiable run evidence, all in one double-clickable file.</p>
-  <p class="sub" data-l="zh">一个 Agent Skill：把多来源的复杂需求（PRD / BDD / Figma / 代码）变成单个自包含的 <code>mini-app-spec.html</code> —— 机器合同、可操作原型、BDD 验收、批注回路、可核验运行证据，全部装进一个双击即开的文件。</p>
+  <p class="sub" data-l="en">An agent skill that turns messy multi-source requirements (PRD / BDD / Figma / code) into a single self-contained <code>mini-app-spec.html</code> — machine contract, operable prototype, BDD acceptance, annotation loop and verifiable run evidence, in one double-clickable file. Built so AI coding agents <em>can't fudge it</em>.</p>
+  <p class="sub" data-l="zh">一个 Agent Skill：把多来源的复杂需求（PRD / BDD / Figma / 代码）变成单个自包含的 <code>mini-app-spec.html</code> —— 机器合同、可操作原型、BDD 验收、批注回路、可核验运行证据，全部装进一个双击即开的文件。从机制上让 AI 编码代理<em>糊弄不了</em>。</p>
   <div class="install">
     <span class="dollar">$</span>
     <code id="cmd">npx skills add wohsj110/mini-app-spec</code>
-    <button onclick="copyCmd(this)"><span data-l="en">Copy</span><span data-l="zh">复制</span></button>
+    <button onclick="copyCmd(this)" aria-label="Copy install command"><span data-l="en">Copy</span><span data-l="zh">复制</span></button>
   </div>
-  <div class="links">
-    <a href="https://github.com/wohsj110/mini-app-spec">⭐ GitHub</a>
-    <a href="https://github.com/wohsj110/mini-app-spec#readme"><span data-l="en">README (EN/中文/日本語/한국어)</span><span data-l="zh">四语 README</span></a>
-    <a href="https://blog.matt-rickard.com/p/the-unreasonable-effectiveness-of-675"><span data-l="en">The original essay</span><span data-l="zh">思想源头文章</span></a>
+  <div class="cta-row">
+    <a class="btn btn-primary" href="demo/mini-app-spec.html"><svg class="ic" aria-hidden="true"><use href="#i-run"/></svg><span data-l="en">Open the live demo</span><span data-l="zh">打开在线 Demo</span></a>
+    <a class="btn btn-ghost" href="https://github.com/wohsj110/mini-app-spec"><svg class="ic" aria-hidden="true"><use href="#i-gh"/></svg> GitHub</a>
+  </div>
+  <div class="shot browser">
+    <div class="bar"><i></i><i></i><i></i><span>demo/mini-app-spec.html — 原型 view</span></div>
+    <img src="assets/img/view-prototype.png" width="2640" height="1680" alt="Prototype view: a living phone screen with a watermark opacity slider at 30%, next to real-time state machine chips, live values, memory-vs-persisted dataflow panels" fetchpriority="high">
   </div>
 </header>
 
 <section id="why" style="border-top:none">
-  <h2><span class="tag">Why</span>
-    <span data-l="en">Documents drift. Evidence doesn't.</span>
-    <span data-l="zh">文档会漂移，证据不会。</span></h2>
-  <p class="lead" data-l="en">Built for AI coding agents (Claude Code, Codex, Cursor…). The agent produces and maintains the spec through a locked-down CLI pipeline — and a validator makes it <em>mechanically hard</em> for the agent to cheat. Based on Matt Rickard's <a href="https://blog.matt-rickard.com/p/the-unreasonable-effectiveness-of-675"><em>The Unreasonable Effectiveness of Mini Apps as Specs</em></a>, hardened with what a document can't have:</p>
-  <p class="lead" data-l="zh">为 AI 编码代理（Claude Code、Codex、Cursor…）设计：agent 通过一条被锁死的 CLI 管线生产和维护规格，validator 让糊弄在<em>机制上</em>变得困难。思想源自 Matt Rickard 的 <a href="https://blog.matt-rickard.com/p/the-unreasonable-effectiveness-of-675"><em>The Unreasonable Effectiveness of Mini Apps as Specs</em></a>，并补上文档做不到的四件事：</p>
+  <span class="tag">Why</span>
+  <h2><span data-l="en">Documents drift. Evidence doesn't.</span><span data-l="zh">文档会漂移，证据不会。</span></h2>
+  <p class="lead" data-l="en">A hardened implementation of Matt Rickard's <a href="https://blog.matt-rickard.com/p/the-unreasonable-effectiveness-of-675"><em>The Unreasonable Effectiveness of Mini Apps as Specs</em></a> — the spec ships as a tiny app stakeholders click through, annotate, and hold the implementation accountable to. On top of the essay, four things a document can't have:</p>
+  <p class="lead" data-l="zh">Matt Rickard 的 <a href="https://blog.matt-rickard.com/p/the-unreasonable-effectiveness-of-675"><em>The Unreasonable Effectiveness of Mini Apps as Specs</em></a> 的加固实现——规格以小应用的形态交付，评审者点着看、钉着批、拿它问责实现。在原文思想之上，补齐文档做不到的四件事：</p>
   <div class="grid g2">
-    <div class="card"><h3><span data-l="en">🧾 Machine contract = SSOT</span><span data-l="zh">🧾 机器合同 = 唯一事实来源</span></h3>
+    <div class="card"><h3><svg class="ic" aria-hidden="true"><use href="#i-contract"/></svg><span data-l="en">Machine contract = SSOT</span><span data-l="zh">机器合同 = 唯一事实来源</span></h3>
       <p data-l="en">Flows, states, transitions, Gherkin scenarios and verification methods live as structured JSON inside the HTML — not prose.</p>
       <p data-l="zh">流、状态、转移、Gherkin 场景与验证方式以结构化 JSON 内嵌在 HTML 里，而不是散文。</p></div>
-    <div class="card"><h3><span data-l="en">🚫 Status computed, never stored</span><span data-l="zh">🚫 派生状态只算不存</span></h3>
+    <div class="card"><h3><svg class="ic" aria-hidden="true"><use href="#i-calc"/></svg><span data-l="en">Status computed, never stored</span><span data-l="zh">派生状态只算不存</span></h3>
       <p data-l="en">Nobody — human or AI — can hand-write <code>passed</code>. A scenario's status is derived from evidence, or it is <code>not-run</code>.</p>
       <p data-l="zh">任何人（无论人还是 AI）都写不了 <code>passed</code>。场景状态只能由证据推导，否则就是 <code>not-run</code>。</p></div>
-    <div class="card"><h3><span data-l="en">🔬 Evidence, not claims</span><span data-l="zh">🔬 要证据，不要口供</span></h3>
+    <div class="card"><h3><svg class="ic" aria-hidden="true"><use href="#i-flask"/></svg><span data-l="en">Evidence, not claims</span><span data-l="zh">要证据，不要口供</span></h3>
       <p data-l="en">Verification commands are frozen at a gate and executed by the tool itself (<code>record-run</code>); outputs are hashed into a ledger.</p>
       <p data-l="zh">验证命令在关卡处冻结、由工具亲自执行（<code>record-run</code>），输出经哈希落入台账。</p></div>
-    <div class="card"><h3><span data-l="en">📌 A review loop that closes</span><span data-l="zh">📌 能闭环的评审回路</span></h3>
+    <div class="card"><h3><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg><span data-l="en">A review loop that closes</span><span data-l="zh">能闭环的评审回路</span></h3>
       <p data-l="en">Pin-style annotations anchor to stable IDs, export as structured change tickets, and block acceptance until adjudicated.</p>
       <p data-l="zh">图钉式批注锚定稳定 ID、导出为结构化修改工单，未裁决就阻断验收。</p></div>
   </div>
 </section>
 
+<section id="tour">
+  <span class="tag">Product tour</span>
+  <h2><span data-l="en">One file, four views — all real, all from the live demo</span><span data-l="zh">一个文件、四个视图——全部真实截图，来自在线 Demo</span></h2>
+  <p class="lead" data-l="en">Every screenshot below is the actual artifact produced by the pipeline for a fixture feature (an export-watermark toggle — no real product data). <a href="demo/mini-app-spec.html">Open it and click around</a>.</p>
+  <p class="lead" data-l="zh">下面每张截图都来自管线为一个虚构功能（导出水印开关，无任何真实业务数据）生成的真实产物。<a href="demo/mini-app-spec.html">打开它随便点</a>。</p>
+
+  <div class="feature">
+    <div class="ftext">
+      <h3><span data-l="en">Flow overview — an infinite canvas state machine</span><span data-l="zh">流总览——无限画布上的状态机</span></h3>
+      <p data-l="en">Each flow renders as a pannable, zoomable SVG state machine straight from the contract.</p>
+      <p data-l="zh">每条流按合同直接渲染为可拖拽、可缩放的 SVG 状态机。</p>
+      <ul>
+        <li data-l="en">Solid = default path, dashed = guard branches, double frame = terminal</li>
+        <li data-l="zh">实线=default 主路径，虚线=guard 分支，双框=终态</li>
+        <li data-l="en">Risk tier / core / alignment badges per flow; click a node to jump into the prototype</li>
+        <li data-l="zh">每流带风险档 / core / 对齐徽标；点节点直接跳进原型对应状态</li>
+        <li data-l="en">Open issues surface right below — undecided questions never hide</li>
+        <li data-l="zh">未决 issues 就列在正下方——没拍板的问题永远藏不住</li>
+      </ul>
+    </div>
+    <div class="fshot browser"><div class="bar"><i></i><i></i><i></i><span>流总览 / Flow overview</span></div>
+      <img src="assets/img/view-map.png" width="2640" height="1680" loading="lazy" alt="Flow overview: SVG state machine with three states, a dashed guard branch back to settings, scenario rows and an open issue listed below"></div>
+  </div>
+
+  <div class="feature rev">
+    <div class="ftext">
+      <h3><span data-l="en">A living prototype — not a slide deck</span><span data-l="zh">活的原型——不是幻灯片</span></h3>
+      <p data-l="en">One persistent screen per flow. Drag the slider and the watermark reacts through a CSS variable — zero re-render, values survive state switches.</p>
+      <p data-l="zh">一条流一块持久屏。拖动滑竿，水印透明度经 CSS 变量实时联动——零重建，状态切换控件值不丢。</p>
+      <ul>
+        <li data-l="en">State machine chips highlight where you are, in real time</li>
+        <li data-l="zh">状态机徽标实时高亮当前位置</li>
+        <li data-l="en">Memory-state vs persisted-state dataflow panels + event log</li>
+        <li data-l="zh">「内存态 vs 已落库」数据流面板 + 事件日志</li>
+        <li data-l="en">Numbered callout pins explain regions in-picture; cloud callbacks simulated by timed auto-transitions</li>
+        <li data-l="zh">数字标注钉在画面里讲解区域；云端回调用定时自动转移模拟</li>
+      </ul>
+    </div>
+    <div class="fshot browser"><div class="bar"><i></i><i></i><i></i><span>原型 / Living prototype</span></div>
+      <img src="assets/img/view-done.png" width="2640" height="1680" loading="lazy" alt="Prototype after the export finished: result card shown, event log capturing the slider drags, tap on Export, auto transition, and snapshot persistence"></div>
+  </div>
+
+  <div class="feature">
+    <div class="ftext">
+      <h3><span data-l="en">Scenario acceptance — BDD cards that stay honest</span><span data-l="zh">场景验收——不说谎的 BDD 卡片</span></h3>
+      <p data-l="en">Given/When/Then straight from the contract, each with its verification kind and a derived status no one can hand-edit.</p>
+      <p data-l="zh">Given/When/Then 直接来自合同，每条挂着验证方式与推导状态——没人能手改。</p>
+      <ul>
+        <li data-l="en"><code>passed</code> only ever comes from evidence; the manual scenario honestly shows <code>not-run</code></li>
+        <li data-l="zh"><code>passed</code> 只可能来自证据；manual 场景老老实实显示 <code>not-run</code></li>
+        <li data-l="en">▶ jumps into the prototype at the scenario's anchored state, with auto-play walkthroughs</li>
+        <li data-l="zh">▶ 一键跳进场景锚定的原型状态，支持自动演示走查</li>
+        <li data-l="en">Requirement tracing shows which scenarios cover which requirement</li>
+        <li data-l="zh">需求追踪显示每条需求被哪些场景覆盖</li>
+      </ul>
+    </div>
+    <div class="fshot browser"><div class="bar"><i></i><i></i><i></i><span>场景验收 / Scenario acceptance</span></div>
+      <img src="assets/img/view-scenarios.png" width="2640" height="1680" loading="lazy" alt="Scenario acceptance view: three Gherkin cards with verify kinds file, grep, manual — two passed, one honestly not-run — plus requirement tracing"></div>
+  </div>
+
+  <div class="feature rev">
+    <div class="ftext">
+      <h3><span data-l="en">Run evidence — every claim carries its receipt</span><span data-l="zh">运行证据——每个结论都带小票</span></h3>
+      <p data-l="en">Runs are executed by the tool itself, never reported by the agent. Each carries exit code, git head, hashed output and evidence files.</p>
+      <p data-l="zh">运行由工具亲自执行、绝不听 agent 转述。每条带退出码、git head、哈希输出与证据文件。</p>
+      <ul>
+        <li data-l="en"><b>适用 (applicable)</b> vs <b>历史 (historical)</b>: change a Then and old evidence silently invalidates</li>
+        <li data-l="zh"><b>适用</b> vs <b>历史</b>：改了 Then，旧证据自动失效</li>
+        <li data-l="en"><code>dirty</code> badges when the working tree wasn't clean — visible, not hidden</li>
+        <li data-l="zh">工作区不干净就打 <code>dirty</code> 徽标——可见，不藏</li>
+        <li data-l="en">Secret-safe grep judge counts matches without ever logging matched values</li>
+        <li data-l="zh">grep 判定器只计数、绝不落匹配值——密钥安全</li>
+      </ul>
+    </div>
+    <div class="fshot browser"><div class="bar"><i></i><i></i><i></i><span>运行证据 / Run evidence</span></div>
+      <img src="assets/img/view-runs.png" width="2640" height="1680" loading="lazy" alt="Run evidence view: four runs with passed status, applicable and historical badges, dirty markers, judge-only commands and evidence counts"></div>
+  </div>
+</section>
+
 <section id="arch">
-  <h2><span class="tag">Architecture</span>
-    <span data-l="en">Three layers, one file</span>
-    <span data-l="zh">三层架构，一个文件</span></h2>
+  <span class="tag">Architecture</span>
+  <h2><span data-l="en">Three layers, one file</span><span data-l="zh">三层架构，一个文件</span></h2>
   <p class="lead" data-l="en">The HTML is the database. <code>spec.mjs</code> is the only write path — if the validator fails, nothing is written. The render engine is stateless and business-agnostic.</p>
   <p class="lead" data-l="zh">HTML 是数据库；<code>spec.mjs</code> 是唯一写入口——validator 不过，什么都写不进去；渲染引擎无状态、与业务无关。</p>
   <pre class="diagram">
@@ -139,50 +265,34 @@
 ├── &lt;script id="<span class="p">mini-app-ledger</span>"&gt;     <span class="a">← runs / evidence / annotations / acceptances</span>
 ├── &lt;script id="<span class="p">mini-app-stamp</span>"&gt;      <span class="a">← envelope: per-block hashes + revision chain</span>
 └── &lt;template id="<span class="p">ui-ST-*</span>"&gt;           <span class="a">← declarative, zero-JS prototype screens</span></pre>
-  <div class="grid g2" style="margin-top:1rem">
-    <div class="card"><h3><span data-l="en">🗺 Flow Overview</span><span data-l="zh">🗺 流总览</span></h3>
-      <p data-l="en">Merged map + SVG state machine on an infinite pan/zoom canvas.</p>
-      <p data-l="zh">合并地图 + SVG 状态机，无限平移缩放画布。</p></div>
-    <div class="card"><h3><span data-l="en">📱 Living Prototype</span><span data-l="zh">📱 活的原型</span></h3>
-      <p data-l="en">A persistent phone screen with state chips, live values, memory-vs-persisted dataflow and an event log — not slide-deck states.</p>
-      <p data-l="zh">持久手机屏：状态徽标、实时数值、内存态 vs 已落库数据流、事件日志——不是幻灯片式的状态切换。</p></div>
-    <div class="card"><h3><span data-l="en">✅ Scenario Acceptance</span><span data-l="zh">✅ 场景验收</span></h3>
-      <p data-l="en">Filterable BDD cards that jump straight into the prototype with auto-play walkthroughs.</p>
-      <p data-l="zh">可筛选的 BDD 卡片，一键跳入原型自动演示走查。</p></div>
-    <div class="card"><h3><span data-l="en">🔏 Run Evidence</span><span data-l="zh">🔏 运行证据</span></h3>
-      <p data-l="en">Every run: frozen command, exit code, hashed output, evidence files. Four judges: <code>assert</code> / <code>db</code> / <code>file</code> / <code>grep</code>.</p>
-      <p data-l="zh">每次运行留痕：冻结命令、退出码、哈希输出、证据文件。四类判定器：<code>assert</code> / <code>db</code> / <code>file</code> / <code>grep</code>。</p></div>
-  </div>
 </section>
 
 <section id="laws">
-  <h2><span class="tag">Anti-Fudge</span>
-    <span data-l="en">Four iron laws, mechanically enforced</span>
-    <span data-l="zh">四条防糊弄铁律，机械执行</span></h2>
+  <span class="tag">Anti-fudge</span>
+  <h2><span data-l="en">Four iron laws, mechanically enforced</span><span data-l="zh">四条防糊弄铁律，机械执行</span></h2>
   <p class="lead" data-l="en">Threat model: careless mistakes, lazy shortcuts and hallucination — the last line of defense is always a human looking at evidence.</p>
   <p class="lead" data-l="zh">威胁模型：防误操作、防偷懒、防幻觉——最后一道防线永远是人亲眼看证据。</p>
   <div class="grid g2">
-    <div class="card"><h3><span class="n">01</span><span data-l="en">Single write path</span><span data-l="zh">唯一写入口</span></h3>
+    <div class="card"><h3><span class="n">01</span><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg><span data-l="en">Single write path</span><span data-l="zh">唯一写入口</span></h3>
       <p data-l="en">Contract writes only via <code>save</code>. Out-of-band edits are caught by envelope hashes and <code>validate --against-git</code> replay detection anchored to git gate commits.</p>
       <p data-l="zh">合同只准经 <code>save</code> 写入。带外编辑被封印哈希与 <code>validate --against-git</code>（以 git gate commit 为锚的回放检测）抓住。</p></div>
-    <div class="card"><h3><span class="n">02</span><span data-l="en">Computed, never stored</span><span data-l="zh">只算不存</span></h3>
-      <p data-l="en">Hand-written <code>passed</code> is a validator error. Zero scenarios never aggregate to green.</p>
+    <div class="card"><h3><span class="n">02</span><svg class="ic" aria-hidden="true"><use href="#i-calc"/></svg><span data-l="en">Computed, never stored</span><span data-l="zh">只算不存</span></h3>
+      <p data-l="en">Hand-written <code>passed</code> is a validator error. Zero scenarios never aggregate to green — empty sets don't pass.</p>
       <p data-l="zh">手写 <code>passed</code> 直接报错；空集永远不变绿。</p></div>
-    <div class="card"><h3><span class="n">03</span><span data-l="en">The tool runs it, not the agent</span><span data-l="zh">工具亲跑，不听转述</span></h3>
+    <div class="card"><h3><span class="n">03</span><svg class="ic" aria-hidden="true"><use href="#i-run"/></svg><span data-l="en">The tool runs it, not the agent</span><span data-l="zh">工具亲跑，不听转述</span></h3>
       <p data-l="en">The agent supplies commands, never results. Commands freeze at a gate; behavior is fingerprinted — change a <code>Then</code> and old evidence silently invalidates.</p>
       <p data-l="zh">agent 只提供命令，不提供结果。命令关卡冻结、行为打指纹——改了 <code>Then</code>，旧证据自动失效。</p></div>
-    <div class="card"><h3><span class="n">04</span><span data-l="en">Acceptance is earned</span><span data-l="zh">验收是挣来的</span></h3>
+    <div class="card"><h3><span class="n">04</span><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span data-l="en">Acceptance is earned</span><span data-l="zh">验收是挣来的</span></h3>
       <p data-l="en">Must quote the user verbatim and pass six hard preconditions: fresh source batch, zero pending annotations, per-scenario waivers for anything non-green.</p>
       <p data-l="zh">必须引用用户原话，并过六条硬前置：来源批次新鲜、批注清零、非绿 core 场景逐条 waiver。</p></div>
   </div>
 </section>
 
 <section id="flow">
-  <h2><span class="tag">Workflow</span>
-    <span data-l="en">Two hard stops, per-flow soft stops</span>
-    <span data-l="zh">两个硬停点 + 逐流软停</span></h2>
+  <span class="tag">Workflow</span>
+  <h2><span data-l="en">Two hard stops, per-flow soft stops</span><span data-l="zh">两个硬停点 + 逐流软停</span></h2>
   <pre class="diagram">
-<span data-l="en">collect sources → map flows ─<span class="r">🛑 STOP ①</span> <b>user confirms flow list & risk tiers</b>
+<span data-l="en">collect sources → map flows ─<span class="r">🛑 STOP ①</span> <b>user confirms flow list &amp; risk tiers</b>
      ↓
 align flow-by-flow (states / transitions / scenarios / prototype)  <span class="w">⏸ user reviews each flow</span>
      ↓
@@ -200,9 +310,8 @@ freeze commands → record-run per scenario ─<span class="r">🛑 STOP ②</sp
 </section>
 
 <section id="install">
-  <h2><span class="tag">Install</span>
-    <span data-l="en">One line. Then prove it works.</span>
-    <span data-l="zh">一行安装，然后让它自证。</span></h2>
+  <span class="tag">Install</span>
+  <h2><span data-l="en">One line. Then make it prove itself.</span><span data-l="zh">一行安装，然后让它自证。</span></h2>
   <div class="tbl-scroll"><table>
     <tr><th data-l="en">Step</th><th data-l="zh">步骤</th><th data-l="en">Command</th><th data-l="zh">命令</th></tr>
     <tr><td><span data-l="en">Install (auto-detects Claude Code / Codex / Cursor)</span><span data-l="zh">安装（自动识别 Claude Code / Codex / Cursor）</span></td>
@@ -212,15 +321,26 @@ freeze commands → record-run per scenario ─<span class="r">🛑 STOP ②</sp
     <tr><td><span data-l="en">Self-test: 20 + 32 cases must all pass</span><span data-l="zh">自检：20 + 32 用例必须全绿</span></td>
         <td><code>node &lt;dir&gt;/scripts/run-fixtures.mjs &amp;&amp; node &lt;dir&gt;/scripts/run-injections.mjs</code></td></tr>
   </table></div>
-  <p class="lead" style="margin-top:1.2rem" data-l="en">Requirements: Node ≥ 18 and git. Zero runtime dependencies. MIT licensed.</p>
-  <p class="lead" style="margin-top:1.2rem" data-l="zh">要求：Node ≥ 18 与 git。零运行时依赖。MIT 协议。</p>
+  <h3 style="margin:1.8rem 0 .6rem;font-size:1.05rem"><span data-l="en">For LLM agents — paste this to any agent</span><span data-l="zh">For LLM——整段复制给任意 agent</span></h3>
+  <pre class="forllm">Install and verify the "mini-app-spec" agent skill:
+
+1. Run: npx skills add wohsj110/mini-app-spec --yes
+2. Verify — both self-test suites must print ALL PASS:
+     node &lt;install-dir&gt;/scripts/run-fixtures.mjs      # 20 cases
+     node &lt;install-dir&gt;/scripts/run-injections.mjs    # 32 cases
+3. Read &lt;install-dir&gt;/SKILL.md before first use:
+   - Artifacts live at docs/mini-app-spec/&lt;feature&gt;/mini-app-spec.html, inside a git repo.
+   - All writes go through: node &lt;install-dir&gt;/scripts/spec.mjs &lt;command&gt; …
+   - Never hand-edit the artifact HTML; edit via extract → modify JSON → save.</pre>
+  <p class="lead" style="margin-top:1.2rem" data-l="en">Requirements: Node ≥ 18 and git. Zero runtime dependencies. MIT licensed. README in <a href="https://github.com/wohsj110/mini-app-spec#readme">English</a> · <a href="https://github.com/wohsj110/mini-app-spec/blob/main/README.zh-CN.md">简体中文</a> · <a href="https://github.com/wohsj110/mini-app-spec/blob/main/README.ja.md">日本語</a> · <a href="https://github.com/wohsj110/mini-app-spec/blob/main/README.ko.md">한국어</a>.</p>
+  <p class="lead" style="margin-top:1.2rem" data-l="zh">要求：Node ≥ 18 与 git。零运行时依赖。MIT 协议。README 提供 <a href="https://github.com/wohsj110/mini-app-spec#readme">English</a> · <a href="https://github.com/wohsj110/mini-app-spec/blob/main/README.zh-CN.md">简体中文</a> · <a href="https://github.com/wohsj110/mini-app-spec/blob/main/README.ja.md">日本語</a> · <a href="https://github.com/wohsj110/mini-app-spec/blob/main/README.ko.md">한국어</a>。</p>
 </section>
 </main>
 
 <footer>
   <div class="wrap">
-    <p>▣ mini-app-spec · <a href="https://github.com/wohsj110/mini-app-spec">GitHub</a> · <a href="https://github.com/wohsj110/mini-app-spec/blob/main/LICENSE">MIT License</a></p>
-    <p style="margin-top:.4rem"><span data-l="en">This page is itself a single self-contained HTML file — as it should be.</span><span data-l="zh">这个页面本身就是一个自包含的单 HTML 文件——理应如此。</span></p>
+    <p>▣ mini-app-spec · <a href="https://github.com/wohsj110/mini-app-spec">GitHub</a> · <a href="https://www.skills.sh/wohsj110/mini-app-spec/mini-app-spec">skills.sh</a> · <a href="https://github.com/wohsj110/mini-app-spec/blob/main/LICENSE">MIT License</a></p>
+    <p style="margin-top:.4rem"><span data-l="en">This page — and the demo it links to — are single self-contained HTML files. As they should be.</span><span data-l="zh">这个页面和它链接的 Demo，都是自包含的单 HTML 文件——理应如此。</span></p>
   </div>
 </footer>
 

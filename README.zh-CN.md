@@ -109,14 +109,26 @@ node <skill>/scripts/spec.mjs status   docs/mini-app-spec/my-feature/mini-app-sp
 | `file` | 文件树对账：声明的路径/glob 全部存在 |
 | `grep` | 对文件的模式**计数**谓词——只计数、绝不落匹配值（密钥安全） |
 
-## 与同伴 skill 组合使用（可选）
+## 与同伴 skill 组合使用（可选，但强烈推荐）
 
-本 skill 可完全独立运行，但放进更大的需求管线里效果更好。若你有类似工具，推荐的组合姿势：
+本 skill 可完全独立运行，但与 [mattpocock/skills](https://github.com/mattpocock/skills) 里这几个开源 skill 搭配效果最佳：
 
-1. **先探索**——用代码库探索类 skill（如 `/wayfinder` 一类的导航器）摸清需求涉及的地形。
-2. **审问需求**——用质询类 skill（如 `grill-me` / `grill-with-docs`）把模糊的想法审成一份带决策记录的需求文档。
-3. **文档 + Figma 喂给本 skill**——把文档和 Figma 帧（经 Figma MCP 取数，本 skill 绝不猜 node-id）登记为 `sources`，逐流构建规格。
-4. **对齐期间**，成串高影响决策可升级回 `grill-me`；没有它则退化为内置的带倾向选择题。
+| 阶段 | Skill | 提供什么 |
+|---|---|---|
+| 事前——探索 | [`wayfinder`](https://github.com/mattpocock/skills) | 把超出单次会话容量的大块工作先摸成一张共享调查地图 |
+| 事前——需求 | [`grill-with-docs`](https://github.com/mattpocock/skills) | 把模糊想法审问成一份决策全部留痕的需求文档 |
+| 对齐期间 | [`grill-me`](https://github.com/mattpocock/skills/blob/main/skills/productivity/grill-me/SKILL.md) | 一次一问（每问附推荐答案）的审问式追问，专治成串高影响决策 |
+
+推荐管线：
+
+```
+/wayfinder 探索地形
+   → grill-with-docs：把想法审问成需求文档
+      → mini-app-spec：把文档 + Figma 帧（经 Figma MCP 取数）登记为 sources，逐流构建规格
+         → 对齐期间成串高影响决策升级给 grill-me
+```
+
+一个都没装也没关系——skill 会优雅退化为内置的带倾向选择题。
 
 ## 仓库结构
 

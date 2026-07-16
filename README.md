@@ -109,14 +109,26 @@ node <skill>/scripts/spec.mjs status   docs/mini-app-spec/my-feature/mini-app-sp
 | `file` | File-tree reconciliation: declared paths/globs all exist |
 | `grep` | Pattern **count** predicate over files — counts only, never logs matched values (secret-safe) |
 
-## Using it with companion skills (optional)
+## Using it with companion skills (optional but recommended)
 
-The skill runs standalone, but it slots into a larger requirement pipeline nicely. If you have similar tools, the pattern is:
+The skill runs fully standalone, but it pairs best with these open-source skills from [mattpocock/skills](https://github.com/mattpocock/skills):
 
-1. **Explore first** — use a codebase-exploration skill (e.g. a `/wayfinder`-style navigator) to understand the territory the requirement touches.
-2. **Interrogate the requirement** — use an interrogation skill (e.g. `grill-me` / `grill-with-docs`) to grill the fuzzy idea into a written requirement doc with decisions on record.
-3. **Feed doc + Figma into this skill** — register the doc and Figma frames (via Figma MCP; the skill never guesses node-ids) as `sources`, then build the spec flow by flow.
-4. **During alignment**, escalate strings of high-impact decisions back to `grill-me`; without it, the skill falls back to built-in leaning multiple-choice questions.
+| Stage | Skill | What it adds |
+|---|---|---|
+| Before — explore | [`wayfinder`](https://github.com/mattpocock/skills) | Map work too big for one session into a shared investigation map before touching the requirement |
+| Before — requirements | [`grill-with-docs`](https://github.com/mattpocock/skills) | Interrogate a fuzzy idea into a written requirement doc with every decision on record |
+| During alignment | [`grill-me`](https://github.com/mattpocock/skills/blob/main/skills/productivity/grill-me/SKILL.md) | One-question-at-a-time interrogation (with a recommended answer each time) for strings of high-impact decisions |
+
+The recommended pipeline:
+
+```
+/wayfinder explore the territory
+   → grill-with-docs: interrogate the idea into a requirement doc
+      → mini-app-spec: register the doc + Figma frames (via Figma MCP) as sources, build the spec flow by flow
+         → escalate high-impact decision strings to grill-me during alignment
+```
+
+Without any of them installed, the skill degrades gracefully to built-in leaning multiple-choice questions.
 
 ## Repository layout
 

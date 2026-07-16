@@ -90,14 +90,26 @@ node ~/.claude/skills/mini-app-spec/scripts/run-injections.mjs
 | `recovery --reason` | 최근 신뢰 가능한 git gate 베이스라인에서 재구축 |
 | `export-md` | 휴대용 읽기 전용 Markdown 내보내기(정본은 HTML) |
 
-## 컴패니언 스킬과 함께 쓰기(선택)
+## 컴패니언 스킬과 함께 쓰기(선택이지만 권장)
 
-이 스킬은 단독으로도 작동하지만, 더 큰 요구사항 파이프라인에 넣으면 효과가 커집니다:
+이 스킬은 완전히 단독으로 작동하지만, [mattpocock/skills](https://github.com/mattpocock/skills)의 다음 오픈소스 스킬들과 함께 쓸 때 가장 효과적입니다:
 
-1. **먼저 탐색** — 코드베이스 탐색 스킬(`/wayfinder` 류의 내비게이터)로 요구사항이 닿는 영역을 파악.
-2. **요구사항 심문** — 심문 스킬(`grill-me` / `grill-with-docs` 등)로 모호한 아이디어를 결정 기록이 남은 요구사항 문서로 단련.
-3. **문서 + Figma를 이 스킬에 입력** — 문서와 Figma 프레임(Figma MCP로 취득; node-id를 추측하지 않음)을 `sources`로 등록하고 플로우 단위로 명세 구축.
-4. **정렬 중** 고영향 결정이 연속되면 `grill-me`로 승격; 없으면 내장된 경향 제시형 객관식 질문으로 폴백합니다.
+| 단계 | 스킬 | 제공하는 것 |
+|---|---|---|
+| 사전 — 탐색 | [`wayfinder`](https://github.com/mattpocock/skills) | 한 세션에 담기지 않는 큰 작업을 공유 조사 맵으로 먼저 파악 |
+| 사전 — 요구사항 | [`grill-with-docs`](https://github.com/mattpocock/skills) | 모호한 아이디어를 모든 결정이 기록된 요구사항 문서로 단련 |
+| 정렬 중 | [`grill-me`](https://github.com/mattpocock/skills/blob/main/skills/productivity/grill-me/SKILL.md) | 한 번에 한 질문(매번 추천 답변 포함) 방식의 심문으로 연속된 고영향 결정을 해결 |
+
+권장 파이프라인:
+
+```
+/wayfinder 로 영역 탐색
+   → grill-with-docs: 아이디어를 심문해 요구사항 문서로
+      → mini-app-spec: 문서 + Figma 프레임(Figma MCP 경유)을 sources로 등록, 플로우 단위로 명세 구축
+         → 정렬 중 연속되는 고영향 결정은 grill-me로 승격
+```
+
+하나도 설치되어 있지 않아도 괜찮습니다 — 스킬은 내장된 경향 제시형 객관식 질문으로 우아하게 폴백합니다.
 
 ## 라이선스
 

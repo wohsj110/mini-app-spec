@@ -90,14 +90,26 @@ node ~/.claude/skills/mini-app-spec/scripts/run-injections.mjs
 | `recovery --reason` | 直近の信頼できる git gate ベースラインから再構築 |
 | `export-md` | ポータブルな読み取り専用 Markdown をエクスポート（正本は HTML のまま） |
 
-## コンパニオンスキルとの併用（任意）
+## コンパニオンスキルとの併用（任意・ただし推奨）
 
-本スキルは単体で動作しますが、より大きな要件パイプラインに組み込むと効果的です：
+本スキルは完全に単体で動作しますが、[mattpocock/skills](https://github.com/mattpocock/skills) の以下のオープンソーススキルと組み合わせると最も効果的です：
 
-1. **まず探索** — コードベース探索スキル（`/wayfinder` のようなナビゲーター）で要件が触れる領域を把握。
-2. **要件を尋問** — 尋問スキル（`grill-me` / `grill-with-docs` など）で曖昧なアイデアを、決定記録付きの要件ドキュメントに鍛え上げる。
-3. **ドキュメント + Figma を本スキルへ** — ドキュメントと Figma フレーム（Figma MCP 経由で取得；node-id を推測することは決してありません）を `sources` として登録し、フロー単位で仕様を構築。
-4. **整合中**、影響の大きい決定が連続する場合は `grill-me` にエスカレーション；なければ組み込みの傾向付き選択式質問にフォールバックします。
+| 段階 | スキル | 提供するもの |
+|---|---|---|
+| 事前 — 探索 | [`wayfinder`](https://github.com/mattpocock/skills) | 1 セッションに収まらない大きな作業を、共有調査マップとして先に把握 |
+| 事前 — 要件 | [`grill-with-docs`](https://github.com/mattpocock/skills) | 曖昧なアイデアを、すべての決定が記録された要件ドキュメントに鍛え上げる |
+| 整合中 | [`grill-me`](https://github.com/mattpocock/skills/blob/main/skills/productivity/grill-me/SKILL.md) | 一度に一問（毎回推奨回答付き）の尋問形式で、影響の大きい連続的な決定を解決 |
+
+推奨パイプライン：
+
+```
+/wayfinder で領域を探索
+   → grill-with-docs：アイデアを尋問して要件ドキュメントに
+      → mini-app-spec：ドキュメント + Figma フレーム（Figma MCP 経由）を sources に登録し、フロー単位で仕様を構築
+         → 整合中の高影響な決定の連続は grill-me にエスカレーション
+```
+
+どれもインストールされていなくても問題ありません — スキルは組み込みの傾向付き選択式質問に優雅にフォールバックします。
 
 ## ライセンス
 

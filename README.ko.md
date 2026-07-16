@@ -74,6 +74,22 @@ node ~/.claude/skills/mini-app-spec/scripts/run-fixtures.mjs
 node ~/.claude/skills/mini-app-spec/scripts/run-injections.mjs
 ```
 
+### For LLM — 아무 에이전트에나 그대로 복사해 설치
+
+```text
+Install and verify the "mini-app-spec" agent skill:
+
+1. Run: npx skills add https://github.com/wohsj110/mini-app-spec --yes
+   (target a specific agent with --agent claude|codex|cursor; add --global for a user-wide install)
+2. Verify the install — both self-test suites must print ALL PASS:
+     node <install-dir>/scripts/run-fixtures.mjs      # 20 cases
+     node <install-dir>/scripts/run-injections.mjs    # 32 cases
+3. Read <install-dir>/SKILL.md before first use. Rules that matter:
+   - Artifacts live at docs/mini-app-spec/<feature>/mini-app-spec.html, inside a git repository.
+   - All writes go through: node <install-dir>/scripts/spec.mjs <command> …
+   - Never hand-edit the artifact HTML; edit via extract → modify JSON → save.
+```
+
 ### 명령어 요약
 
 | 명령 | 용도 |

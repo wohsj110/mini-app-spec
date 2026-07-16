@@ -4,6 +4,8 @@
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg) ![Node >= 18](https://img.shields.io/badge/Node-%E2%89%A5%2018-blue.svg) ![Zero Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)
 
+🌐 **サイト：** https://wohsj110.github.io/mini-app-spec/ · **skills.sh：** https://www.skills.sh/wohsj110/mini-app-spec/mini-app-spec
+
 複数ソースにまたがる複雑な要件（PRD / BDD / Figma / コード）を、**自己完結型の単一ファイル `mini-app-spec.html`** に変換・校正するエージェントスキルです。この*実行可能な仕様書*には、機械可読コントラクト、操作可能なプロトタイプ、状態機械キャンバス、BDD 受け入れシナリオ、注釈レビューのループ、検証可能な実行証跡が埋め込まれます。実装完了後は、同じ成果物で実装との**突合（照合）**を行います。
 
 AI コーディングエージェント（Claude Code、Codex、Cursor など）向けに設計されており、エージェントはロックダウンされた CLI パイプラインを通じて仕様書を生成・維持します。バリデータが、エージェントのごまかしを*仕組みとして困難*にします。
@@ -66,7 +68,10 @@ mini-app-spec.html          ← 成果物：ダブルクリックで開く、サ
 要件：Node ≥ 18、git（成果物は git リポジトリ内に置く必要があります）。
 
 ```bash
-# Claude Code スキルとしてインストール（Codex/Cursor は .agents/skills/ に配置）
+# skills CLI で 1 行インストール（Claude Code / Codex / Cursor を自動検出；--global でユーザー全体に）
+npx skills add wohsj110/mini-app-spec
+
+# もしくは git clone
 git clone https://github.com/wohsj110/mini-app-spec ~/.claude/skills/mini-app-spec
 
 # セルフテスト：フィクスチャ 20 件 + インジェクション/攻撃 32 件がすべてグリーンであること
@@ -79,7 +84,7 @@ node ~/.claude/skills/mini-app-spec/scripts/run-injections.mjs
 ```text
 Install and verify the "mini-app-spec" agent skill:
 
-1. Run: npx skills add https://github.com/wohsj110/mini-app-spec --yes
+1. Run: npx skills add wohsj110/mini-app-spec --yes
    (target a specific agent with --agent claude|codex|cursor; add --global for a user-wide install)
 2. Verify the install — both self-test suites must print ALL PASS:
      node <install-dir>/scripts/run-fixtures.mjs      # 20 cases

@@ -4,6 +4,8 @@
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg) ![Node >= 18](https://img.shields.io/badge/Node-%E2%89%A5%2018-blue.svg) ![Zero Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)
 
+🌐 **Website:** https://wohsj110.github.io/mini-app-spec/ · **skills.sh:** https://www.skills.sh/wohsj110/mini-app-spec/mini-app-spec
+
 An agent skill that turns messy, multi-source requirements (PRD / BDD / Figma / code) into a **single self-contained `mini-app-spec.html`** — an *executable specification* that embeds a machine-readable contract, an operable prototype, a state-machine canvas, BDD acceptance scenarios, an annotation/review loop, and verifiable run evidence. After implementation, the same artifact is used to **reconcile** what was built against what was agreed.
 
 It is designed for AI coding agents (Claude Code, Codex, Cursor, …): the agent produces and maintains the spec through a locked-down CLI pipeline, and a validator makes it *mechanically hard* for the agent to cheat.
@@ -66,7 +68,10 @@ The artifact renders four views: **Flow Overview** (merged map + SVG state machi
 Requirements: Node ≥ 18, git (artifacts must live inside a git repository).
 
 ```bash
-# Install as a Claude Code skill (or drop into .agents/skills/ for Codex/Cursor)
+# One-liner via the skills CLI (auto-detects Claude Code / Codex / Cursor; add --global for user-wide)
+npx skills add wohsj110/mini-app-spec
+
+# Or plain git clone
 git clone https://github.com/wohsj110/mini-app-spec ~/.claude/skills/mini-app-spec
 
 # Self-test: 20 fixture cases + 32 injection/attack cases must all pass
@@ -79,7 +84,7 @@ node ~/.claude/skills/mini-app-spec/scripts/run-injections.mjs
 ```text
 Install and verify the "mini-app-spec" agent skill:
 
-1. Run: npx skills add https://github.com/wohsj110/mini-app-spec --yes
+1. Run: npx skills add wohsj110/mini-app-spec --yes
    (target a specific agent with --agent claude|codex|cursor; add --global for a user-wide install)
 2. Verify the install — both self-test suites must print ALL PASS:
      node <install-dir>/scripts/run-fixtures.mjs      # 20 cases

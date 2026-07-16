@@ -4,6 +4,8 @@
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg) ![Node >= 18](https://img.shields.io/badge/Node-%E2%89%A5%2018-blue.svg) ![Zero Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)
 
+🌐 **官网：** https://wohsj110.github.io/mini-app-spec/ · **skills.sh：** https://www.skills.sh/wohsj110/mini-app-spec/mini-app-spec
+
 一个 Agent Skill：把多来源的复杂需求（PRD / BDD / Figma / 代码）生成并校准为**单个自包含的 `mini-app-spec.html`** —— 一份*可执行的规格*，内嵌机器合同、可操作原型、状态机画布、BDD 验收场景、批注评审回路与可核验的运行证据。实现完成后，还用同一份产物对实现做**对账**。
 
 它为 AI 编码代理（Claude Code、Codex、Cursor 等）设计：agent 通过一条被锁死的 CLI 管线生产和维护规格，validator 让 agent 在机制上*很难糊弄*。
@@ -66,7 +68,10 @@ mini-app-spec.html          ← 交付物：双击即开，无需服务器
 要求：Node ≥ 18、git（产物必须放在 git 仓库内）。
 
 ```bash
-# 作为 Claude Code skill 安装（Codex/Cursor 放 .agents/skills/ 亦可）
+# skills CLI 一行安装（自动识别 Claude Code / Codex / Cursor；加 --global 装到用户级）
+npx skills add wohsj110/mini-app-spec
+
+# 或者直接 git clone
 git clone https://github.com/wohsj110/mini-app-spec ~/.claude/skills/mini-app-spec
 
 # 自检：20 条 fixture 用例 + 32 条注入/攻击用例必须全绿
@@ -79,7 +84,7 @@ node ~/.claude/skills/mini-app-spec/scripts/run-injections.mjs
 ```text
 Install and verify the "mini-app-spec" agent skill:
 
-1. Run: npx skills add https://github.com/wohsj110/mini-app-spec --yes
+1. Run: npx skills add wohsj110/mini-app-spec --yes
    (target a specific agent with --agent claude|codex|cursor; add --global for a user-wide install)
 2. Verify the install — both self-test suites must print ALL PASS:
      node <install-dir>/scripts/run-fixtures.mjs      # 20 cases

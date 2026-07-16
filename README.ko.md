@@ -4,6 +4,8 @@
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg) ![Node >= 18](https://img.shields.io/badge/Node-%E2%89%A5%2018-blue.svg) ![Zero Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)
 
+🌐 **웹사이트:** https://wohsj110.github.io/mini-app-spec/ · **skills.sh:** https://www.skills.sh/wohsj110/mini-app-spec/mini-app-spec
+
 여러 소스에 흩어진 복잡한 요구사항(PRD / BDD / Figma / 코드)을 **자체 완결형 단일 파일 `mini-app-spec.html`** 로 생성·정렬하는 에이전트 스킬입니다. 이 *실행 가능한 명세서*에는 기계가 읽을 수 있는 계약(contract), 조작 가능한 프로토타입, 상태 기계 캔버스, BDD 인수 시나리오, 주석 리뷰 루프, 검증 가능한 실행 증거가 내장됩니다. 구현이 끝나면 같은 산출물로 구현 결과를 **대조(정산)** 합니다.
 
 AI 코딩 에이전트(Claude Code, Codex, Cursor 등)를 위해 설계되었습니다. 에이전트는 잠금된 CLI 파이프라인을 통해 명세서를 생성·유지하며, 밸리데이터가 에이전트의 눈속임을 *구조적으로 어렵게* 만듭니다.
@@ -66,7 +68,10 @@ mini-app-spec.html          ← 산출물: 더블클릭으로 열림, 서버 불
 요구사항: Node ≥ 18, git(산출물은 git 저장소 안에 있어야 합니다).
 
 ```bash
-# Claude Code 스킬로 설치 (Codex/Cursor는 .agents/skills/ 에 배치)
+# skills CLI 한 줄 설치 (Claude Code / Codex / Cursor 자동 감지; --global 은 사용자 전역 설치)
+npx skills add wohsj110/mini-app-spec
+
+# 또는 git clone
 git clone https://github.com/wohsj110/mini-app-spec ~/.claude/skills/mini-app-spec
 
 # 셀프 테스트: 픽스처 20건 + 인젝션/공격 32건 모두 그린이어야 함
@@ -79,7 +84,7 @@ node ~/.claude/skills/mini-app-spec/scripts/run-injections.mjs
 ```text
 Install and verify the "mini-app-spec" agent skill:
 
-1. Run: npx skills add https://github.com/wohsj110/mini-app-spec --yes
+1. Run: npx skills add wohsj110/mini-app-spec --yes
    (target a specific agent with --agent claude|codex|cursor; add --global for a user-wide install)
 2. Verify the install — both self-test suites must print ALL PASS:
      node <install-dir>/scripts/run-fixtures.mjs      # 20 cases

@@ -1,0 +1,8 @@
+{
+  "description": "behavior 需求既无场景也无 waiver",
+  "base": "valid-minimal.json",
+  "expect": ["ALG-02"],
+  "ops": [
+    { "op": "replace", "path": "/contract/requirements/0/scenarioRefs", "value": [] }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "description": "场景改为 db 验证后，run 缺 buildVariant/devicePackage/deviceSerial 设备上下文",
+  "base": "valid-typical.json",
+  "expect": ["LED-01"],
+  "ops": [
+    { "op": "replace", "path": "/contract/scenarios/0/verification/kind", "value": "db" },
+    { "op": "replace", "path": "/contract/scenarios/0/verification/assertion", "value": { "query": "SELECT count(*) FROM ai_cloud_task WHERE status=2", "predicate": ">=1" } }
+  ]
+}

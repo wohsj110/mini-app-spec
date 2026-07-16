@@ -1,0 +1,271 @@
+{
+  "specVersion": 1,
+  "contract": {
+    "meta": {
+      "id": "FEAT-demo-typ",
+      "title": "典型合法样例"
+    },
+    "sources": [
+      {
+        "id": "SRC-doc",
+        "kind": "doc",
+        "locator": "docs/demo.md",
+        "version": "3",
+        "role": "目标与范围"
+      },
+      {
+        "id": "SRC-fig",
+        "kind": "figma",
+        "locator": "figma://FILE/node/12:34",
+        "version": "v7",
+        "role": "视觉与交互"
+      }
+    ],
+    "flows": [
+      {
+        "id": "FLOW-a",
+        "title": "处理并展示结果",
+        "priority": "core",
+        "risk": "high",
+        "core": true,
+        "alignStatus": "aligned",
+        "stateRefs": [
+          "ST-a",
+          "ST-b",
+          "ST-c"
+        ]
+      }
+    ],
+    "states": [
+      {
+        "id": "ST-a",
+        "flowRef": "FLOW-a",
+        "name": "开始",
+        "uiTemplateRef": "ui-ST-a",
+        "figma": {
+          "fileKey": "FILE",
+          "nodeId": "12:34",
+          "version": "v7"
+        },
+        "entry": "default",
+        "terminal": false
+      },
+      {
+        "id": "ST-b",
+        "flowRef": "FLOW-a",
+        "name": "处理中",
+        "uiTemplateRef": "ui-ST-b",
+        "figmaNote": "loading 态无图",
+        "entry": "none",
+        "terminal": false
+      },
+      {
+        "id": "ST-c",
+        "flowRef": "FLOW-a",
+        "name": "结果",
+        "uiTemplateRef": "ui-ST-c",
+        "figma": {
+          "fileKey": "FILE",
+          "nodeId": "12:56",
+          "version": "v7"
+        },
+        "entry": "none",
+        "terminal": true
+      }
+    ],
+    "transitions": [
+      {
+        "id": "TR-1",
+        "flowRef": "FLOW-a",
+        "from": "ST-a",
+        "to": "ST-b",
+        "trigger": "点击开始",
+        "result": "进入处理",
+        "isDefault": true,
+        "guard": null,
+        "scenarioRefs": [
+          "SCN-1"
+        ]
+      },
+      {
+        "id": "TR-2",
+        "flowRef": "FLOW-a",
+        "from": "ST-b",
+        "to": "ST-c",
+        "trigger": "处理完成",
+        "result": "展示结果",
+        "isDefault": true,
+        "guard": null,
+        "scenarioRefs": [
+          "SCN-1"
+        ]
+      },
+      {
+        "id": "TR-err",
+        "flowRef": "FLOW-a",
+        "from": "ST-b",
+        "to": "ST-a",
+        "trigger": "失败重试",
+        "result": "回到开始",
+        "isDefault": false,
+        "guard": "处理失败",
+        "loopAllowed": true,
+        "scenarioRefs": []
+      }
+    ],
+    "requirements": [
+      {
+        "id": "REQ-1",
+        "text": "用户发起处理后能看到结果",
+        "kind": "behavior",
+        "sourceRefs": [
+          "SRC-doc"
+        ],
+        "excerptRef": null,
+        "scenarioRefs": [
+          "SCN-1"
+        ],
+        "waiver": null
+      }
+    ],
+    "scenarios": [
+      {
+        "id": "SCN-1",
+        "flowRef": "FLOW-a",
+        "stateRefs": [
+          "ST-a",
+          "ST-c"
+        ],
+        "given": [
+          "已进入开始屏"
+        ],
+        "when": "点击开始并等待完成",
+        "then": [
+          "结果屏展示处理结果"
+        ],
+        "examples": [
+          {
+            "id": "EX-1",
+            "values": {
+              "输入": "标准"
+            }
+          },
+          {
+            "id": "EX-2",
+            "values": {
+              "输入": "边界"
+            }
+          }
+        ],
+        "verification": {
+          "kind": "assert",
+          "assertion": {
+            "type": "junit",
+            "rule": "all-passed"
+          },
+          "evidencePolicy": {
+            "kind": "junit-xml",
+            "path": "module-effect/build/test-results/**/*.xml"
+          },
+          "command": "./gradlew :module-effect:testDevDebugUnitTest --tests DemoTest",
+          "commandHash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+          "commandConfirmedAt": "2026-07-16T10:00:00+08:00"
+        }
+      }
+    ],
+    "issues": []
+  },
+  "ledger": {
+    "runs": [
+      {
+        "id": "RUN-1",
+        "scenarioRef": "SCN-1",
+        "scenarioFingerprint": "fp1:9c57b54ececf5b64d2b73198dc83fc2f32be99a20ac0dc2cf29c9052521885c7",
+        "verificationHash": "vh1:b3b81955f09164b96301ab1470417e7d8bb029197a4b2bcaaeb7b4b7e8c7ce9d",
+        "exampleResults": [
+          {
+            "exampleRef": "EX-1",
+            "result": "passed"
+          },
+          {
+            "exampleRef": "EX-2",
+            "result": "passed"
+          }
+        ],
+        "at": "2026-07-16T11:00:00+08:00",
+        "revision": 3,
+        "gitHead": "abc1234",
+        "dirty": false,
+        "cmd": "./gradlew :module-effect:testDevDebugUnitTest --tests DemoTest",
+        "cmdHash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "exitCode": 0,
+        "timeoutMs": 600000,
+        "testCount": 2,
+        "outputExcerpt": "2 tests completed, 0 failed",
+        "redacted": false,
+        "outputSha256": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "evidence": [
+          {
+            "path": "ai/evidence/demo/junit.xml",
+            "sha256": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "type": "junit-xml",
+            "size": 1234,
+            "redacted": false
+          }
+        ],
+        "result": "passed"
+      }
+    ],
+    "acceptances": [
+      {
+        "id": "ACC-1",
+        "at": "2026-07-16T12:00:00+08:00",
+        "verbatim": "验收通过，接受",
+        "revision": 4,
+        "sourceBatchId": "BATCH-1",
+        "sourceWaivers": [],
+        "deviationsAcknowledged": []
+      }
+    ],
+    "sourceObservations": [
+      {
+        "id": "OBS-1",
+        "batchId": "BATCH-1",
+        "sourceRef": "SRC-doc",
+        "observedHash": "sha256:d1d1d1",
+        "observedAt": "2026-07-16T11:50:00+08:00",
+        "outcome": "unchanged"
+      },
+      {
+        "id": "OBS-2",
+        "batchId": "BATCH-1",
+        "sourceRef": "SRC-fig",
+        "observedHash": "sha256:f1f1f1",
+        "observedAt": "2026-07-16T11:50:00+08:00",
+        "outcome": "unchanged"
+      }
+    ],
+    "annotations": [],
+    "recoveries": [],
+    "changelog": [
+      {
+        "rev": 2,
+        "at": "2026-07-16T10:30:00+08:00",
+        "type": "spec",
+        "changed": []
+      },
+      {
+        "rev": 3,
+        "at": "2026-07-16T11:00:00+08:00",
+        "type": "run",
+        "changed": []
+      },
+      {
+        "rev": 4,
+        "at": "2026-07-16T12:00:00+08:00",
+        "type": "acceptance",
+        "changed": []
+      }
+    ]
+  }
+}

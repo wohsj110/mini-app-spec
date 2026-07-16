@@ -1,0 +1,15 @@
+{
+  "specId": "watermark-toggle",
+  "_fixtureNote": "手工模拟的浏览器批注导出。真实流程中 targetId 由页面点击即锚生成、天然匹配产物；运行 eval-3 前须把下面的 targetId 替换为 eval-2 实际产物中的短 ID，否则 REF-01 挡门（这本身也是管线在正确工作）。",
+  "annotations": [
+    {
+      "targetId": "SCN-export-off",
+      "comment": "关掉水印后导出，低端机型走降级导出管线时场景没覆盖",
+      "proposal": "examples 增加『低端机型降级导出管线』分支，then 同样断言成品图无水印"
+    },
+    {
+      "targetId": "ST-settings",
+      "comment": "开关旁边加一行『专业版专属』角标"
+    }
+  ]
+}

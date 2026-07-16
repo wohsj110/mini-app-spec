@@ -1,0 +1,739 @@
+<!doctype html>
+<!-- mini-app-spec 固定引擎模板 v0.7.0
+     变更（相对 v0.6）：批注层（📌 浮钮 + 抽屉：任意稳定 ID 锚点、localStorage 暂存、一键导出 JSON 交 spec.mjs merge-feedback 合并为 proposed）；「流地图」与「流程图」合并为「流总览」（每 flow = 徽标 + SVG 状态机图 + 场景行，消除状态行与图节点的重复）；
+     ui-ux-pro-max 打磨：focus-visible 焦点环、点击目标加大、150-250ms 过渡、prefers-reduced-motion、图形信息不只靠颜色（形状+文字并行）。
+     本文件只被 spec.mjs 抽取 engine style/script 段使用；业务产物由 spec.mjs 生成，禁止手改引擎段。 -->
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>mini-app-spec engine template</title>
+<style id="mini-app-engine-style">
+:root{--a:#21B9FF;--c:#7C5CFF;--bg:#0f1115;--card:#171a21;--line:#2a2f3a;--fg:#e6e9ef;--muted:#9aa3b2;--ok:#2ecc71;--warn:#ffd166;--bad:#ff5d5d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.6 -apple-system,system-ui,"PingFang SC",sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:10px 18px;background:#12151b;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+header h1{font-size:15px;margin:0;font-weight:600}
+.badge{font-size:11px;padding:2px 9px;border-radius:10px;background:rgba(124,92,255,.18);color:#b9a8ff;border:1px solid rgba(124,92,255,.5)}
+.tabs{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{border:1px solid var(--line);background:#1d2129;color:var(--fg);border-radius:9px;padding:6px 13px;font-size:13px;cursor:pointer}
+.tabs button.active{background:var(--a);color:#04222e;border-color:var(--a);font-weight:600}
+main{padding:18px;max-width:1120px;margin:0 auto}
+.note{font-size:12px;color:var(--muted);margin:0 0 12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px;overflow-x:auto}
+.card h2{font-size:14px;margin:0 0 8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip{font-family:ui-monospace,Menlo,monospace;font-size:11px;background:#0c0e12;border:1px solid var(--line);border-radius:6px;padding:1px 6px;cursor:pointer;user-select:none;white-space:nowrap;color:#cfe3ff}
+.chip:active{border-color:var(--a)}
+.tag{font-size:11px;padding:1px 8px;border-radius:9px;white-space:nowrap;border:1px solid transparent}
+.tag.core{background:rgba(255,93,93,.14);color:var(--bad);border-color:rgba(255,93,93,.4)}
+.tag.high{background:rgba(255,209,102,.12);color:var(--warn);border-color:rgba(255,209,102,.35)}
+.tag.low,.tag.aligned,.tag.passed{background:rgba(46,204,113,.12);color:var(--ok);border-color:rgba(46,204,113,.35)}
+.tag.pending,.tag.notrun{background:#1d2129;color:var(--muted);border-color:var(--line)}
+.tag.failed,.tag.blocked{background:rgba(255,93,93,.14);color:var(--bad);border-color:rgba(255,93,93,.4)}
+.tag.partial,.tag.weak,.tag.hist{background:rgba(255,209,102,.12);color:var(--warn);border-color:rgba(255,209,102,.35)}
+.row{font-size:13px;padding:5px 0;border-top:1px dashed var(--line);display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.row:first-of-type{border-top:none}
+.muted{color:var(--muted);font-size:12px}
+table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:660px}
+th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+th{background:#1d2129;color:var(--muted);font-weight:600;white-space:nowrap}
+td .gwt{margin:0;padding-left:0;list-style:none}
+td .gwt li{margin:1px 0}
+.player{display:flex;gap:18px;flex-wrap:wrap}
+.stage-wrap{flex:0 0 340px}
+.phone{width:340px;border-radius:34px;border:1px solid #2f3542;background:#000;padding:8px;margin:0 auto}
+.stage{border-radius:26px;overflow:auto;background:#0d0d12;min-height:520px;position:relative}
+.stage .screen{padding:16px;color:var(--fg)}
+.stage .statusbar{height:22px;display:flex;justify-content:space-between;align-items:center;padding:0 14px;font-size:10px;color:#7e8796}
+.side{flex:1;min-width:280px}
+.trbtn{display:block;width:100%;text-align:left;margin:6px 0;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#1d2129;color:var(--fg);cursor:pointer;font-size:13px}
+.trbtn:hover{border-color:var(--a)}
+.trbtn .g{color:var(--warn);font-size:12px}
+select,button.reset{padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:#1d2129;color:var(--fg);font-size:13px}
+.statebar{display:flex;gap:8px;align-items:center;margin:8px 0;flex-wrap:wrap}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#e6e9ef;color:#111;font-size:12px;padding:6px 12px;border-radius:8px;opacity:0;transition:opacity .2s;z-index:9;pointer-events:none}
+.toast.show{opacity:1}
+details.ev{margin:4px 0}
+details.ev summary{cursor:pointer;font-size:12.5px}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:11px;word-break:break-all;color:#cfe3ff}
+pre.mono{background:#0b0d12;border:1px solid var(--line);border-radius:8px;padding:10px;white-space:pre-wrap}
+/* ── 模板可用的通用 mock 工具类（模板零 JS/零复杂内联样式） ── */
+.stage .mcv{position:relative;height:230px;border-radius:14px;overflow:hidden;background:#000;margin:10px 0}
+.stage .mcv .layer{position:absolute;inset:0}
+.stage .optline{display:flex;flex-direction:column;gap:8px;margin:10px 0}
+.stage .opt{padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:#171a21;color:var(--fg);text-align:left;font-size:13px}
+.stage .opt.on{border-color:var(--a);background:rgba(33,185,255,.12);color:var(--a)}
+.stage .gearrow{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.stage .gear{padding:6px 12px;border:1px solid var(--line);border-radius:16px;font-size:12px;color:var(--fg);background:#171a21}
+.stage .gear.on{border-color:var(--a);color:var(--a);background:rgba(33,185,255,.12)}
+.stage .cta{padding:11px 16px;border:0;border-radius:22px;background:var(--a);color:#04222e;font-weight:600;font-size:13px}
+.stage .cta.bad{background:var(--bad);color:#fff}
+.stage .ghost{padding:9px 13px;border:1px solid var(--line);border-radius:9px;background:#171a21;color:var(--fg);font-size:12.5px}
+.stage .slabel{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin:12px 0 5px}
+.stage input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;background:linear-gradient(90deg,#3a3a42 0%,#ffd166 100%);outline:none}
+.stage input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid rgba(0,0,0,.35);box-shadow:0 2px 6px rgba(0,0,0,.5);cursor:pointer}
+@media (max-width:740px){.stage-wrap{flex-basis:100%}.phone{width:100%;max-width:360px}}
+/* ── ui-ux-pro-max 打磨：焦点环 / 点击目标 / 动效 / reduced-motion ── */
+button{cursor:pointer}
+button,select,.chip,input[type=range]{transition:border-color .18s,background .18s,color .18s}
+:where(button,select,.chip,input,summary):focus-visible{outline:2px solid var(--a);outline-offset:2px;border-radius:8px}
+.tabs button,.trbtn,button.reset{min-height:40px}
+main{animation:fadein .2s ease}
+@keyframes fadein{from{opacity:.55}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* ── 流程图 ── */
+.svgwrap{background:#0c0e12;background-image:radial-gradient(circle,#1a1e26 1px,transparent 1px);background-size:22px 22px;border:1px solid var(--line);border-radius:10px;padding:0;overflow:hidden;position:relative;height:340px;touch-action:none}
+.svgwrap svg{display:block;width:100%;height:100%;cursor:grab}
+.svgwrap svg:active{cursor:grabbing}
+.svgtools{position:absolute;top:8px;right:8px;display:flex;gap:6px;z-index:2}
+.svgtools button{width:30px;height:28px;border-radius:7px;border:1px solid var(--line);background:rgba(23,26,33,.9);color:var(--fg);font-size:13px;cursor:pointer}
+.svgtools button:hover{border-color:var(--a)}
+.svgtools button.fitb{width:auto;padding:0 9px;font-size:11.5px}
+.fnode{cursor:pointer}
+.fnode rect{fill:#171a21;stroke:var(--line);stroke-width:1.2;rx:10}
+.fnode.entry rect{stroke:var(--a)}
+.fnode.term rect{stroke:var(--ok);stroke-dasharray:none}
+.fnode:hover rect{stroke:var(--a);stroke-width:2}
+.fnode text{fill:var(--fg);font-size:12px}
+.fnode .sub{fill:var(--muted);font-size:9.5px;font-family:ui-monospace,Menlo,monospace}
+.fedge{fill:none;stroke:#4b5566;stroke-width:1.6;marker-end:url(#arrw)}
+.fedge.def{stroke:var(--a)}
+.fedge.guard{stroke:#8d7a3f;stroke-dasharray:5 4}
+.felabel{fill:#c6cdd8;font-size:10.5px;paint-order:stroke;stroke:#0c0e12;stroke-width:3.5px;stroke-linejoin:round}
+.felabel.g{fill:var(--warn)}
+.flegend{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin:8px 2px 0}
+.flegend i{display:inline-block;width:22px;height:0;border-top:2px solid var(--a);vertical-align:middle;margin-right:5px}
+.flegend i.g{border-top:2px dashed #8d7a3f}
+.flegend i.n{border-top:2px solid #4b5566}
+.strip{display:flex;gap:10px;align-items:center;padding:7px 18px;background:#15181f;border-bottom:1px solid var(--line);font-size:12px;flex-wrap:wrap}
+.stage .gear.anim{animation:gpulse 1.5s ease-in-out infinite}
+@keyframes gpulse{0%,100%{box-shadow:0 0 0 0 rgba(33,185,255,0)}50%{box-shadow:0 0 10px 2px rgba(33,185,255,.35)}}
+body.annmode [data-spec-id]{outline:1px dashed rgba(33,185,255,.35);outline-offset:2px;cursor:crosshair}
+body.annmode [data-spec-id]:hover{outline:2px solid var(--a);background:rgba(33,185,255,.07)}
+.annpin{display:inline-block;margin-left:4px;user-select:none;vertical-align:middle}
+.annpin svg,.icn{width:13px;height:13px;vertical-align:-2px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.annfab .icn{width:16px;height:16px;margin-right:4px}
+.empty{border:1px dashed var(--line);border-radius:10px;padding:18px;text-align:center;color:var(--muted);font-size:12.5px}
+.empty button{margin-top:10px;padding:7px 14px;border-radius:8px;border:1px solid var(--a);background:rgba(33,185,255,.1);color:var(--a);font-size:12.5px}
+.tabs button.anntoggle.active{background:var(--warn);color:#3a2c00;border-color:var(--warn)}
+.schip{padding:3px 10px;border-radius:999px;background:#1d2129;border:1px solid var(--line);font-size:11.5px;color:#aab2c0;white-space:nowrap;cursor:pointer}
+.schip.seen{border-color:rgba(46,204,113,.4);color:var(--ok)}
+.schip.act{background:rgba(124,92,255,.18);border-color:var(--c);color:#cdbdff;font-weight:600}
+.schips{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.schips .arr{color:#454c5b;font-size:11px}
+.mapsec{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+.mapsec .h{font-size:12px;color:#cfd6e2;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.mapsec .h::before{content:"";width:3px;height:12px;border-radius:2px;background:var(--c)}
+.livebox{background:#0b0d12;border:1px solid #232a35;border-radius:9px;padding:9px 12px;font:12px/1.6 ui-monospace,Menlo,monospace;color:#cfe3ff}
+.notepin{position:absolute;top:-9px;right:-9px;width:20px;height:20px;border-radius:50%;background:var(--c);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:3;box-shadow:0 2px 6px rgba(0,0,0,.5)}
+body.hidenotes .stage .notepin{display:none}
+.noteno{display:inline-flex;width:18px;height:18px;border-radius:50%;background:var(--c);color:#fff;font-size:11px;font-weight:700;align-items:center;justify-content:center;flex:none}
+.metricbadge{padding:4px 12px;border-radius:10px;border:1px solid rgba(46,204,113,.45);background:rgba(46,204,113,.1);color:var(--ok);font-size:12px;font-family:ui-monospace,Menlo,monospace}
+.notelist .row.hl{background:rgba(124,92,255,.14);border-radius:8px}
+.logbox{background:#0b0d12;border:1px solid #232a35;border-radius:9px;padding:8px 10px;font:11.5px/1.6 ui-monospace,Menlo,monospace;color:#9fb3c8;max-height:190px;overflow-y:auto}
+.logbox .lg-tr{color:#21B9FF}.logbox .lg-live{color:#ffd166}.logbox .lg-sys{color:#7e8796}.logbox .lg-snap{color:#2ecc71}
+.databox{display:flex;gap:8px;flex-wrap:wrap}
+.databox>div{flex:1;min-width:150px;background:#0b0d12;border:1px solid #232a35;border-radius:9px;padding:8px 10px;font:11.5px/1.5 ui-monospace,Menlo,monospace;color:#cfe3ff;white-space:pre-wrap}
+.databox .lab{font-size:10.5px;color:#7e8796;margin-bottom:4px}
+[data-hold-compare]{cursor:grab}
+.comparing [data-compare-hide]{opacity:0!important;transition:opacity .12s}
+@keyframes chippulse{0%{box-shadow:0 0 0 0 rgba(124,92,255,.6)}100%{box-shadow:0 0 0 9px rgba(124,92,255,0)}}
+.schip.act{animation:chippulse .5s ease-out 1}
+.scncard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.scncard .gwt2{margin:6px 0 0;font-size:12.5px;color:#c6cdd8}
+.scncard .gwt2 b{color:var(--muted);font-weight:600;margin-right:4px}
+.jump{padding:4px 11px;border-radius:8px;border:1px solid var(--line);background:#1d2129;color:var(--a);font-size:12px;cursor:pointer;margin-left:auto}
+.jump:hover{border-color:var(--a)}
+.filterbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+/* ── 批注层 ── */
+.annfab{position:fixed;right:18px;bottom:18px;z-index:8;min-width:52px;height:52px;border-radius:26px;border:1px solid var(--line);background:#1d2129;color:var(--fg);font-size:13px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.45);padding:0 16px}
+.annfab .cnt{color:var(--a);font-weight:700;margin-left:4px}
+.annpanel{position:fixed;top:0;right:0;bottom:0;width:min(380px,92vw);background:#12151b;border-left:1px solid var(--line);z-index:10;padding:16px;overflow-y:auto;display:none}
+.annpanel.open{display:block}
+.annpanel h2{font-size:14px;margin:0 0 10px;display:flex;justify-content:space-between;align-items:center}
+.annpanel label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+.annpanel input,.annpanel textarea{width:100%;background:#0c0e12;border:1px solid var(--line);border-radius:8px;color:var(--fg);padding:8px;font-size:13px;font-family:inherit}
+.annpanel textarea{min-height:72px;resize:vertical}
+.annbtns{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.annbtns button{padding:8px 13px;border-radius:8px;border:1px solid var(--line);background:#1d2129;color:var(--fg);font-size:12.5px;cursor:pointer}
+.annbtns button.pri{background:var(--a);color:#04222e;border-color:var(--a);font-weight:600}
+.annitem{border:1px solid var(--line);border-radius:9px;padding:9px 11px;margin:8px 0;font-size:12.5px}
+.annitem .meta{display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap}
+.annitem.draft{border-color:rgba(255,209,102,.4)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script id="mini-app-engine" data-engine-version="0.13.0">
+(function () {
+  'use strict';
+  const readJson = (id) => { const el = document.getElementById(id); return el ? JSON.parse(el.textContent) : null; };
+  const wrapData = readJson('mini-app-contract') || {};
+  const C = wrapData.contract || {}; const L = readJson('mini-app-ledger') || {}; const STAMP = readJson('mini-app-stamp') || {};
+  const app = document.getElementById('app');
+  const h = (tag, attrs, ...kids) => { const el = document.createElement(tag); for (const [k, v] of Object.entries(attrs || {})) { if (k === 'class') el.className = v; else if (k === 'text') el.textContent = v; else el.setAttribute(k, v); } for (const kid of kids.flat()) if (kid) el.appendChild(typeof kid === 'string' ? document.createTextNode(kid) : kid); return el; };
+
+  const toast = h('div', { class: 'toast', role: 'status', 'aria-live': 'polite' }); document.body.appendChild(toast);
+  const say = (t) => { toast.textContent = t; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 1300); };
+  const mkIcon = (d) => { const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('class', 'icn'); svg.setAttribute('aria-hidden', 'true'); const path = document.createElementNS('http://www.w3.org/2000/svg', 'path'); path.setAttribute('d', d); svg.appendChild(path); return svg; };
+  const PIN_D = 'M12 21s-6-5.4-6-10a6 6 0 1 1 12 0c0 4.6-6 10-6 10z M12 11.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z';
+  const NOTE_D = 'M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z';
+  const chip = (id) => { const c = h('span', { class: 'chip', 'data-spec-id': id, title: '点击复制 ID（批注模式下=锚定批注）', text: id }); c.addEventListener('click', (e) => { e.stopPropagation(); try { navigator.clipboard.writeText(id); } catch (_) { const ta = h('textarea', { text: id }); document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); } say('已复制 ' + id); }); return c; };
+
+  // ── 浏览器侧 fingerprint（与 spec.mjs canonical 同规）；不可用时降级提示
+  const canon = (v) => { if (typeof v === 'string') return v.normalize('NFC').replace(/\r\n/g, '\n'); if (Array.isArray(v)) return v.map(canon); if (v && typeof v === 'object') { const o = {}; for (const k of Object.keys(v).sort()) o[k.normalize('NFC')] = canon(v[k]); return o; } return v; };
+  const sha256hex = async (s) => { const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join(''); };
+  const FP = {}; let fpReady = false, fpFailed = false;
+  (async () => {
+    try {
+      for (const s of C.scenarios || []) {
+        FP[s.id] = {
+          fp: 'fp1:' + await sha256hex(JSON.stringify(canon({ given: s.given, when: s.when, then: s.then, examples: s.examples, assertion: s.verification && s.verification.assertion, evidencePolicy: s.verification && s.verification.evidencePolicy }))),
+          vh: 'vh1:' + await sha256hex(JSON.stringify(canon({ kind: s.verification && s.verification.kind, command: s.verification && s.verification.command, confirmedAt: s.verification && s.verification.commandConfirmedAt, judgeVersion: 'judge1' }))),
+        };
+      }
+      fpReady = true;
+    } catch (e) { fpFailed = true; }
+    if (active === '场景验收' || active === '运行证据') sync();
+  })();
+  const runsOf = (scnId) => (L.runs || []).filter((r) => r.scenarioRef === scnId);
+  const applicable = (r) => !fpReady ? null : (FP[r.scenarioRef] && r.scenarioFingerprint === FP[r.scenarioRef].fp && r.verificationHash === FP[r.scenarioRef].vh);
+  function scnDerived(s) {
+    if (!fpReady) return fpFailed ? '（浏览器无法算指纹，以 spec.mjs status 为准）' : '计算中…';
+    const app0 = runsOf(s.id).filter(applicable);
+    app0.sort((a, b) => (a.revision || 0) - (b.revision || 0)); // 与 contract.md §5 顺序语义一致
+    if (!app0.length) return 'not-run';
+    const exs = (s.examples || []).length ? s.examples : [{ id: s.id + '-implicit' }];
+    const vals = exs.map((ex) => { let v = 'not-run'; for (const r of app0) { const er = (r.exampleResults || []).find((e) => e.exampleRef === ex.id); if (er) v = er.result; } return v; });
+    if (vals.includes('failed')) return 'failed';
+    if (vals.includes('blocked')) return 'blocked';
+    if (vals.every((v) => v === 'not-run')) return 'not-run';
+    if (vals.includes('not-run')) return 'partial-coverage';
+    return (s.verification || {}).kind === 'mock' ? 'passed-weak' : 'passed';
+  }
+  const stTag = (v) => h('span', { class: 'tag ' + (v === 'passed' ? 'passed' : v === 'failed' || v === 'blocked' ? 'failed' : v === 'not-run' ? 'notrun' : 'partial'), text: v });
+
+  // ── 布局
+  const header = h('header', null,
+    h('h1', { text: (C.meta && C.meta.title) || 'mini-app-spec' }),
+    chip((C.meta && C.meta.id) || '?'),
+    h('span', { class: 'badge', text: 'r' + (STAMP.revision != null ? STAMP.revision : '?') }));
+  const tabs = h('div', { class: 'tabs' });
+  const main = h('main');
+  const strip = h('div', { class: 'strip' });
+  header.appendChild(tabs); app.appendChild(header); app.appendChild(strip); app.appendChild(main);
+  function renderStrip() {
+    strip.textContent = '';
+    const scns = C.scenarios || [];
+    const accepted = (L.acceptances || []).length > 0;
+    let run = null;
+    if (fpReady) { run = 0; for (const s2 of scns) if (scnDerived(s2) !== 'not-run') run++; }
+    strip.appendChild(h('span', { class: 'tag ' + (accepted ? 'passed' : 'core'), text: accepted ? 'accepted' : '草稿 · 未对账' }));
+    strip.appendChild(h('span', { class: 'muted', text: `run 覆盖 ${run == null ? '…' : run}/${scns.length} · 开放 issues ${(C.issues || []).filter((i) => i.status === 'open').length} · 完整性锚与权威判定以 spec.mjs validate --against-git / status 为准` }));
+  }
+  const views = { 流总览: renderMap, 原型: renderPlayer, 场景验收: renderScenarios, 运行证据: renderRuns };
+  let active = '流总览';
+  for (const name of Object.keys(views)) { const b = h('button', { text: name }); b.addEventListener('click', () => { active = name; sync(); }); tabs.appendChild(b); }
+  let annMode = false, pendingTarget = '';
+  const annToggle = h('button', { class: 'anntoggle', 'aria-pressed': 'false', title: '开启后：点击页面任何元素即锚定批注（原型导航暂停）' }, mkIcon(PIN_D), '批注模式');
+  annToggle.addEventListener('click', () => { annMode = !annMode; annToggle.classList.toggle('active', annMode); annToggle.setAttribute('aria-pressed', String(annMode)); document.body.classList.toggle('annmode', annMode); say(annMode ? '批注模式：点击任意元素锚定批注' : '批注模式已关闭'); });
+  tabs.appendChild(annToggle);
+  document.addEventListener('click', (e) => {
+    if (!annMode) return;
+    const t = e.target && e.target.closest ? e.target.closest('[data-go],[data-spec-id]') : null;
+    if (!t || t.closest('.annpanel') || t === annToggle) return;
+    e.preventDefault(); e.stopPropagation();
+    const id = t.getAttribute('data-go') || t.getAttribute('data-spec-id');
+    if (id) annotateAt(id);
+  }, true);
+  function sync() { if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; } [...tabs.children].forEach((b) => { if (!b.classList.contains('anntoggle')) b.classList.toggle('active', b.textContent === active); }); renderStrip(); main.textContent = ''; views[active](); paintPins(); }
+
+  // ── 视图一：流地图
+  function renderMap() {
+    main.appendChild(h('p', { class: 'note', text: '实线=default 主路径 · 虚线=guard 分支 · ▶=入口 · 双框=终态 · 点节点跳原型；图=无限画布（拖拽平移 · 滚轮缩放 · 双击/「适配」复位）。反馈主通道：聊天里说短 ID（点击可复制）。' }));
+    for (const f of C.flows || []) {
+      const card = h('div', { class: 'card', 'data-spec-id': f.id });
+      card.appendChild(h('h2', null, chip(f.id), f.title,
+        f.core ? h('span', { class: 'tag core', text: 'core' }) : null,
+        h('span', { class: 'tag ' + (f.risk === 'high' ? 'high' : 'low'), text: f.risk === 'high' ? '高不确定' : '低风险' }),
+        h('span', { class: 'tag ' + (f.alignStatus === 'aligned' ? 'aligned' : 'pending'), text: f.alignStatus === 'aligned' ? '已对齐' : '待对齐' })));
+      const svg = buildFlowSvg(f);
+      if (svg) {
+        const wrapS = h('div', { class: 'svgwrap' });
+        wrapS.appendChild(svg);
+        const pz = attachPanZoom(svg, svg.__vp, svg.__w, svg.__h);
+        const tools = h('div', { class: 'svgtools' });
+        const bMinus = h('button', { text: '－', 'aria-label': '缩小' }); bMinus.addEventListener('click', () => pz.zoom(0.8));
+        const bPlus = h('button', { text: '＋', 'aria-label': '放大' }); bPlus.addEventListener('click', () => pz.zoom(1.25));
+        const bFit = h('button', { class: 'fitb', text: '适配', 'aria-label': '缩放至适配' }); bFit.addEventListener('click', () => pz.fit());
+        tools.appendChild(bMinus); tools.appendChild(bPlus); tools.appendChild(bFit);
+        wrapS.appendChild(tools);
+        card.appendChild(wrapS);
+      }
+      for (const scn of (C.scenarios || []).filter((s) => s.flowRef === f.id)) {
+        card.appendChild(h('div', { class: 'row', 'data-spec-id': scn.id }, chip(scn.id), scn.when, h('span', { class: 'muted', text: 'verify:' + ((scn.verification || {}).kind || '?') }), fpReady ? stTag(scnDerived(scn)) : null));
+      }
+      main.appendChild(card);
+    }
+    const issues = (C.issues || []).filter((i) => i.status === 'open');
+    if (issues.length) {
+      const card = h('div', { class: 'card' }); card.appendChild(h('h2', { text: '未决 issues' }));
+      for (const i of issues) card.appendChild(h('div', { class: 'row', 'data-spec-id': i.id }, chip(i.id), h('span', { class: 'tag ' + (i.type === 'blocker' ? 'core' : 'low'), text: i.type }), i.question));
+      main.appendChild(card);
+    }
+  }
+
+  // ── 视图：流程图（SVG 状态机；点节点 → 跳原型对应状态）
+  const NS = 'http://www.w3.org/2000/svg';
+  const sv = (tag, attrs, ...kids) => { const el = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs || {})) el.setAttribute(k, v); for (const kid of kids.flat()) if (kid) el.appendChild(kid); return el; };
+  const svText = (x, y, txt, cls) => { const t = sv('text', { x, y, class: cls || '' }); t.textContent = txt; return t; };
+  function buildFlowSvg(f) {
+    {
+      const states = (C.states || []).filter((s) => s.flowRef === f.id);
+      const trans = (C.transitions || []).filter((t) => t.flowRef === f.id);
+      if (!states.length) return null;
+      // BFS 分层
+      const col = {}; const entries = states.filter((s) => s.entry && s.entry !== 'none');
+      let frontier = entries.map((s) => s.id); frontier.forEach((id) => { col[id] = 0; });
+      let depth = 0;
+      while (frontier.length && depth < 20) {
+        depth++;
+        const next = [];
+        for (const t of trans) if (frontier.includes(t.from) && col[t.to] === undefined && t.from !== t.to) { col[t.to] = depth; next.push(t.to); }
+        frontier = next;
+      }
+      for (const s of states) if (col[s.id] === undefined) col[s.id] = depth + 1;
+      const rows = {}; const rowOf = {};
+      for (const s of states) { rows[col[s.id]] = rows[col[s.id]] || 0; rowOf[s.id] = rows[col[s.id]]++; }
+      const NW = 152, NH = 52, GX = 210, GY = 96, X0 = 24, Y0 = 28;
+      const px = (id) => X0 + col[id] * GX, py = (id) => Y0 + rowOf[id] * GY;
+      const maxCol = Math.max(...states.map((s) => col[s.id]));
+      const maxRow = Math.max(...Object.values(rows));
+      const W = X0 + (maxCol + 1) * GX + 20, H0 = Y0 + maxRow * GY + 40;
+      const svg = sv('svg', { width: '100%', height: '100%' });
+      svg.appendChild(sv('defs', {}, sv('marker', { id: 'arrw', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, sv('path', { d: 'M0,0L10,5L0,10z', fill: '#7e8796' }))));
+      // 边（分组偏移防重叠）
+      const pairSeen = {};
+      for (const t of trans) {
+        const key = t.from + '>' + t.to; const nth = pairSeen[key] = (pairSeen[key] || 0) + 1;
+        const cls = 'fedge' + (t.guard ? ' guard' : (t.isDefault ? ' def' : ''));
+        let d, lx, ly;
+        if (t.from === t.to) { // 自环：多条按 nth 抬升弧高，标签分层不重叠
+          const x = px(t.from) + NW / 2, y = py(t.from);
+          const lift = 30 + (nth - 1) * 24;
+          d = `M ${x - 18} ${y} C ${x - 38} ${y - lift - 6}, ${x + 38} ${y - lift - 6}, ${x + 18} ${y}`;
+          lx = x; ly = y - lift + 4;
+        } else {
+          const x1 = px(t.from) + NW, y1 = py(t.from) + NH / 2 + (nth - 1) * 10;
+          const x2 = px(t.to), y2 = py(t.to) + NH / 2 + (nth - 1) * 10;
+          if (col[t.to] > col[t.from]) { d = `M ${x1} ${y1} C ${x1 + 44} ${y1}, ${x2 - 44} ${y2}, ${x2} ${y2}`; lx = (x1 + x2) / 2; ly = (y1 + y2) / 2 - 7; }
+          else { // 回边走下方
+            const yb = Math.max(y1, y2) + NH / 2 + 26 + nth * 8;
+            d = `M ${x1 - NW / 2} ${py(t.from) + NH} C ${x1 - NW / 2} ${yb}, ${x2 + NW / 2} ${yb}, ${x2 + NW / 2} ${py(t.to) + NH}`;
+            lx = (x1 + x2) / 2; ly = yb + 4;
+          }
+        }
+        const edgeTitle = sv('title', {}); edgeTitle.textContent = t.id + '：' + (t.trigger || '') + (t.guard ? '〔guard: ' + t.guard + '〕' : '') + ' → ' + (t.result || '');
+        const pathEl = sv('path', { d, class: cls }); pathEl.appendChild(edgeTitle.cloneNode(true)); svg.appendChild(pathEl);
+        const lbl = (t.trigger || t.id).slice(0, 12) + (t.guard ? '〔' + t.guard.slice(0, 8) + '…〕' : '');
+        const txtEl = svText(lx - lbl.length * 4.6, ly, lbl, 'felabel' + (t.guard ? ' g' : ''));
+        txtEl.appendChild(edgeTitle); svg.appendChild(txtEl);
+      }
+      // 节点
+      for (const s of states) {
+        const g = sv('g', { 'data-spec-id': s.id, class: 'fnode' + (s.entry && s.entry !== 'none' ? ' entry' : '') + (s.terminal ? ' term' : ''), transform: `translate(${px(s.id)},${py(s.id)})` });
+        g.appendChild(sv('rect', { width: NW, height: NH, rx: 10 }));
+        if (s.terminal) g.appendChild(sv('rect', { x: 3, y: 3, width: NW - 6, height: NH - 6, rx: 8, fill: 'none', stroke: '#2ecc71', 'stroke-width': 0.8 }));
+        g.appendChild(svText(10, 21, (s.entry && s.entry !== 'none' ? '▶ ' : '') + s.name.slice(0, 11), ''));
+        g.appendChild(svText(10, 40, s.id + (s.terminal ? ' · 终态' : '') + (s.figma ? ' · figma✓' : ' · 无图'), 'sub'));
+        g.addEventListener('click', () => { curFlow = f.id; curState = s.id; trace = []; active = '原型'; sync(); say('跳到 ' + s.name); });
+        svg.appendChild(g);
+      }
+      const gRoot = sv('g', {});
+      [...svg.childNodes].forEach((n) => { if (n.tagName !== 'defs') gRoot.appendChild(n); });
+      svg.appendChild(gRoot);
+      svg.__vp = gRoot; svg.__w = W; svg.__h = H0;
+      return svg;
+    }
+  }
+  // 无限画布：拖拽平移 / 滚轮缩放（光标锚点）/ 双击或按钮适配
+  function attachPanZoom(svg, g, W, H) {
+    let k = 1, tx = 12, ty = 12;
+    const apply = () => g.setAttribute('transform', 'translate(' + tx + ',' + ty + ') scale(' + k + ')');
+    const fit = () => { const cw = svg.clientWidth || W, ch = svg.clientHeight || H; k = Math.min(1.4, Math.max(0.15, Math.min((cw - 24) / W, (ch - 24) / H))); tx = (cw - W * k) / 2; ty = (ch - H * k) / 2; apply(); };
+    requestAnimationFrame(fit);
+    svg.addEventListener('wheel', (e) => { e.preventDefault(); const r = svg.getBoundingClientRect(); const mx = e.clientX - r.left, my = e.clientY - r.top; const nk = Math.min(4, Math.max(0.15, k * Math.exp(-e.deltaY * 0.0016))); tx = mx - (mx - tx) * (nk / k); ty = my - (my - ty) * (nk / k); k = nk; apply(); }, { passive: false });
+    let pan = null, moved = false;
+    svg.addEventListener('pointerdown', (e) => { if (e.target.closest && e.target.closest('.fnode')) return; pan = { x: e.clientX, y: e.clientY, tx, ty }; moved = false; try { svg.setPointerCapture(e.pointerId); } catch (_) {} });
+    svg.addEventListener('pointermove', (e) => { if (!pan) return; if (Math.abs(e.clientX - pan.x) + Math.abs(e.clientY - pan.y) > 3) moved = true; tx = pan.tx + e.clientX - pan.x; ty = pan.ty + e.clientY - pan.y; apply(); });
+    svg.addEventListener('pointerup', () => { pan = null; });
+    svg.addEventListener('dblclick', (e) => { if (!(e.target.closest && e.target.closest('.fnode'))) fit(); });
+    return { fit, zoom: (f) => { const cw = svg.clientWidth / 2, ch = svg.clientHeight / 2; const nk = Math.min(4, Math.max(0.15, k * f)); tx = cw - (cw - tx) * (nk / k); ty = ch - (ch - ty) * (nk / k); k = nk; apply(); } };
+  }
+
+  // ── 视图二：原型播放器（data-live 微交互：range 输入映射 --live-<name> CSS 变量 + data-live-text 文本）
+  let curFlow = (C.flows || [])[0] && (C.flows || [])[0].id, curState = null, trace = [];
+  let scnFlowFilter = '', scnKindFilter = '';
+  const stageCache = { tpl: null, el: null };
+  let autoTimer = null;
+  function applyStateRegions(stage) {
+    stage.querySelectorAll('[data-show-in]').forEach((el) => { el.style.display = el.getAttribute('data-show-in').split(/[\s,]+/).includes(curState) ? '' : 'none'; });
+    stage.querySelectorAll('[data-on-in]').forEach((el) => { el.classList.toggle('on', el.getAttribute('data-on-in').split(/[\s,]+/).includes(curState)); });
+  }
+  function entryOf(fid) { const ss = (C.states || []).filter((s) => s.flowRef === fid); return (ss.find((s) => s.entry && s.entry !== 'none') || ss[0] || {}).id; }
+  const liveStore = {}, snapStore = {}, liveLogAt = {};
+  const evLog = [];
+  const logEv = (cls, msg) => {
+    evLog.unshift({ t: new Date().toTimeString().slice(0, 8), cls, msg });
+    if (evLog.length > 80) evLog.pop();
+    const box = document.getElementById('evlogbox'); if (box) renderLog(box);
+  };
+  function renderLog(box) { box.textContent = ''; for (const e of evLog) box.appendChild(h('div', { class: 'lg-' + e.cls, text: '[' + e.t + '] ' + e.msg })); }
+  function wireLive(stage) {
+    const init = (inp) => {
+      if (inp.dataset.wired) return;
+      inp.dataset.wired = '1';
+      const name = inp.getAttribute('data-live');
+      const key = curState + ':' + name;
+      if (liveStore[key] != null) inp.value = liveStore[key];
+      const max = parseFloat(inp.getAttribute('max') || '100') || 100;
+      const apply = () => {
+        liveStore[key] = inp.value;
+        stage.style.setProperty('--live-' + name, String(parseFloat(inp.value) / max));
+        stage.querySelectorAll('[data-live-text="' + name + '"]').forEach((el) => { el.textContent = inp.value; });
+        document.querySelectorAll('[data-live-echo="' + name + '"]').forEach((el) => { el.textContent = inp.value + '/' + max + '（' + (parseFloat(inp.value) / max).toFixed(2) + '）'; });
+        const nv = parseFloat(inp.value) / max;
+        stage.querySelectorAll('[data-formula][data-live-formula="' + name + '"]').forEach((el) => {
+          el.textContent = el.getAttribute('data-formula').replace(/\{v\}/g, nv.toFixed(2)).replace(/\{inv\}/g, (1 - nv).toFixed(2)).replace(/\{raw\}/g, inp.value).replace(/\{max\}/g, String(max));
+        });
+        const now = Date.now();
+        if (!liveLogAt[name] || now - liveLogAt[name] > 500) { liveLogAt[name] = now; logEv('live', name + ' → ' + inp.value + '（本地实时，仅内存态）'); }
+        document.querySelectorAll('[data-live-json]').forEach((el) => { const o = {}; stage.querySelectorAll('input[type=range][data-live]').forEach((i2) => { o[i2.getAttribute('data-live')] = Number(i2.value); }); el.textContent = JSON.stringify(o, null, 1); });
+      };
+      inp.addEventListener('input', apply); apply();
+    };
+    stage.querySelectorAll('input[type=range][data-live]').forEach(init);
+  }
+  function renderPlayer() {
+    const bar = h('div', { class: 'statebar' });
+    const sel = h('select');
+    for (const f of C.flows || []) { const o = h('option', { value: f.id, text: f.title + '（' + f.id + '）' }); if (f.id === curFlow) o.setAttribute('selected', ''); sel.appendChild(o); }
+    sel.addEventListener('change', () => { curFlow = sel.value; curState = null; trace = []; stageCache.tpl = null; stageCache.el = null; sync(); });
+    const rst = h('button', { class: 'reset', text: '重置' });
+    rst.addEventListener('click', () => { curState = null; trace = []; stageCache.tpl = null; stageCache.el = null; const f0 = (C.flows || []).find((f) => f.id === curFlow); for (const sid of (f0 && f0.stateRefs) || []) for (const k of Object.keys(liveStore)) if (k.startsWith(sid + ':')) { delete liveStore[k]; delete snapStore[k]; } logEv('sys', '重置流程'); sync(); });
+    bar.appendChild(sel); bar.appendChild(rst); main.appendChild(bar);
+    if (!curState) curState = entryOf(curFlow);
+    const st = (C.states || []).find((s) => s.id === curState);
+    const wrapEl = h('div', { class: 'player' });
+    const tplId = st ? st.uiTemplateRef : null;
+    let stage;
+    if (tplId && stageCache.tpl === tplId && stageCache.el) {
+      stage = stageCache.el; // 单流单屏：同模板不重建——控件值、图层、快照全保留，状态切换只显隐区域
+    } else {
+      const stage = h('div', { class: 'stage' });
+      stage.appendChild(h('div', { class: 'statusbar' }, h('span', { text: '9:41' }), h('span', { text: '5G ▦ ▂▄▆' })));
+      const tpl = st && document.getElementById(st.uiTemplateRef);
+      if (tpl) stage.appendChild(tpl.content.cloneNode(true));
+      else stage.appendChild(h('div', { class: 'screen' }, h('p', { class: 'muted', text: '（无 UI 模板：' + (st ? st.uiTemplateRef : '?') + '）' })));
+      stage.addEventListener('click', (ev) => {
+        const sn = ev.target && ev.target.closest ? ev.target.closest('[data-snap]') : null;
+        if (sn) {
+          const nm = sn.getAttribute('data-snap');
+          const i2 = stage.querySelector('input[type=range][data-live="' + nm + '"]');
+          if (i2) { snapStore[curState + ':' + nm] = i2.value; logEv('snap', '快照写入：' + nm + ' = ' + i2.value + '（已落库态更新）'); }
+        }
+      });
+      stage.addEventListener('click', (ev) => { const t = ev.target && ev.target.closest ? ev.target.closest('[data-go]') : null; if (t) go(t.getAttribute('data-go')); });
+      stage.querySelectorAll('[data-hold-compare]').forEach((cv) => {
+        const on = () => { cv.classList.add('comparing'); logEv('sys', '长按对比：显示原图'); };
+        const off = () => cv.classList.remove('comparing');
+        cv.addEventListener('pointerdown', on); cv.addEventListener('pointerup', off); cv.addEventListener('pointerleave', off);
+      });
+      stage.querySelectorAll('[data-snap-text]').forEach((el) => { const k = curState + ':' + el.getAttribute('data-snap-text'); if (snapStore[k] != null) el.textContent = snapStore[k]; });
+      wireLive(stage);
+      // 标注点（data-note → ①②③ 数字钉，点击联动右侧区域介绍）
+      const noteEls = [...stage.querySelectorAll('[data-note]')];
+      noteEls.forEach((el, i) => {
+        el.style.position = 'relative';
+        const b = h('span', { class: 'notepin', title: '标注点 ' + (i + 1), text: String(i + 1) });
+        b.addEventListener('click', (ev) => { ev.stopPropagation(); const row = document.querySelector('[data-note-idx="' + i + '"]'); if (row) { row.classList.add('hl'); row.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); setTimeout(() => row.classList.remove('hl'), 1500); } });
+        el.appendChild(b);
+      });
+      if (noteEls.length) {
+        const nt = h('button', { class: 'reset', text: document.body.classList.contains('hidenotes') ? '显示标注' : '隐藏标注' });
+        nt.addEventListener('click', () => { document.body.classList.toggle('hidenotes'); sync(); });
+        bar.appendChild(nt);
+      }
+
+      stageCache.tpl = tplId; stageCache.el = stage;
+    }
+    applyStateRegions(stage);
+    stage.querySelectorAll('[data-snap-text]').forEach((el) => { const k = curState + ':' + el.getAttribute('data-snap-text'); if (snapStore[k] != null) el.textContent = snapStore[k]; });
+    const noteEls2 = [...stage.querySelectorAll('[data-note]')];
+    wrapEl.appendChild(h('div', { class: 'stage-wrap' }, h('div', { class: 'phone' }, stage)));
+    const side = h('div', { class: 'side' });
+    side.appendChild(h('div', { class: 'statebar', 'data-spec-id': st ? st.id : '' }, chip(st ? st.id : '?'), h('strong', { text: st ? st.name : '?' }), st && st.terminal ? h('span', { class: 'tag aligned', text: '终态' }) : null));
+    // 计量徽标（transition.metrics 沿轨迹累计——如「云请求 0」演示拖动不重请求）
+    const mkeys = new Set(); for (const t0 of (C.transitions || []).filter((x) => x.flowRef === curFlow)) for (const k of Object.keys(t0.metrics || {})) mkeys.add(k);
+    if (mkeys.size) {
+      const tally = {}; for (const k of mkeys) tally[k] = 0;
+      for (const trId of trace) { const t0 = (C.transitions || []).find((x) => x.id === trId); for (const [k, v] of Object.entries((t0 || {}).metrics || {})) tally[k] += v; }
+      const mrow = h('div', { class: 'schips' });
+      for (const [k, v] of Object.entries(tally)) mrow.appendChild(h('span', { class: 'metricbadge', text: k + ' ' + v }));
+      side.appendChild(mrow);
+    }
+    if (st && st.figmaNote) side.appendChild(h('p', { class: 'note', text: '无图原因：' + st.figmaNote }));
+    // 业务逻辑实时映射①：状态机 chips（当前高亮、已走过标绿、点击跳转）
+    const flowObj = (C.flows || []).find((f) => f.id === curFlow) || { stateRefs: [] };
+    const visited = new Set([entryOf(curFlow)]);
+    for (const trId of trace) { const t0 = (C.transitions || []).find((x) => x.id === trId); if (t0) visited.add(t0.to); }
+    const strip = h('div', { class: 'schips' });
+    (flowObj.stateRefs || []).forEach((sid, i) => {
+      if (i) strip.appendChild(h('span', { class: 'arr', text: '→' }));
+      const st0 = (C.states || []).find((x) => x.id === sid);
+      const cchip = h('span', { class: 'schip' + (sid === curState ? ' act' : visited.has(sid) ? ' seen' : ''), text: st0 ? st0.name : sid });
+      cchip.addEventListener('click', () => { curState = sid; sync(); });
+      strip.appendChild(cchip);
+    });
+    const map1 = h('div', { class: 'mapsec' }); map1.appendChild(h('div', { class: 'h', text: '状态机 · 实时映射' })); map1.appendChild(strip);
+    side.appendChild(map1);
+    // 业务逻辑实时映射②：live 值（拖原型里的滑竿，这里实时变）
+    const liveInputs = [...stage.querySelectorAll('input[type=range][data-live]')];
+    if (liveInputs.length) {
+      const box = h('div', { class: 'livebox' });
+      for (const inp of liveInputs) {
+        const nm = inp.getAttribute('data-live'), mx = inp.getAttribute('max') || '100';
+        box.appendChild(h('div', null, nm + ' = ', h('span', { 'data-live-echo': nm, text: inp.value + '/' + mx + '（' + (parseFloat(inp.value) / (parseFloat(mx) || 100)).toFixed(2) + '）' })));
+      }
+      const map2 = h('div', { class: 'mapsec' }); map2.appendChild(h('div', { class: 'h', text: 'live 值 · 拖动实时联动' })); map2.appendChild(box);
+      side.appendChild(map2);
+      // 数据流：内存态（拖动即变）vs 已快照（松手/落库写入）
+      const map2b = h('div', { class: 'mapsec' }); map2b.appendChild(h('div', { class: 'h', text: '数据流 · 内存态 vs 已落库' }));
+      const dbx = h('div', { class: 'databox' });
+      const memO = {}; liveInputs.forEach((i2) => { memO[i2.getAttribute('data-live')] = Number(i2.value); });
+      const memD = h('div', null, h('div', { class: 'lab', text: '内存态 · 拖动即变' }), h('div', { 'data-live-json': '1', text: JSON.stringify(memO, null, 1) }));
+      const snapO = {}; liveInputs.forEach((i2) => { const k = curState + ':' + i2.getAttribute('data-live'); snapO[i2.getAttribute('data-live')] = snapStore[k] != null ? Number(snapStore[k]) : null; });
+      const snapD = h('div', null, h('div', { class: 'lab', text: '已落库 · 松手写入' }), h('div', null, Object.values(snapO).every((x) => x == null) ? '（尚无落位记录）' : JSON.stringify(snapO, null, 1)));
+      dbx.appendChild(memD); dbx.appendChild(snapD);
+      map2b.appendChild(dbx); side.appendChild(map2b);
+    }
+    if (noteEls2.length) {
+      const map4 = h('div', { class: 'mapsec notelist' }); map4.appendChild(h('div', { class: 'h', text: '标注点 · 区域介绍' }));
+      noteEls2.forEach((el, i) => {
+        const fig = el.getAttribute('data-figma');
+        map4.appendChild(h('div', { class: 'row', 'data-note-idx': String(i) }, h('span', { class: 'noteno', text: String(i + 1) }), el.getAttribute('data-note'), fig ? h('span', { class: 'muted', text: 'figma: ' + fig }) : null));
+      });
+      side.appendChild(map4);
+    }
+    side.appendChild(h('p', { class: 'note', text: '可用转移（点原型内控件或下方按钮）：' }));
+    for (const tr of (C.transitions || []).filter((t) => t.from === curState)) {
+      const b = h('button', { class: 'trbtn', 'data-spec-id': tr.id }, chip(tr.id), ' ' + tr.trigger + ' → ' + tr.to + ' ', tr.guard ? h('span', { class: 'g', text: '〔guard: ' + tr.guard + '〕' }) : null, tr.autoMs ? h('span', { class: 'muted', text: '⏱ ' + (tr.autoMs / 1000) + 's 自动' }) : null);
+      b.addEventListener('click', () => go(tr.id));
+      side.appendChild(b);
+    }
+    const linked = (C.scenarios || []).filter((sc) => (sc.stateRefs || []).includes(curState) || (C.transitions || []).some((t0) => t0.from === curState && (t0.scenarioRefs || []).includes(sc.id)));
+    if (linked.length) {
+      const map3 = h('div', { class: 'mapsec' }); map3.appendChild(h('div', { class: 'h', text: '本状态的验收场景' }));
+      for (const sc of linked) {
+        const row = h('div', { class: 'row', 'data-spec-id': sc.id }, chip(sc.id), sc.when, fpReady ? stTag(scnDerived(sc)) : null);
+        row.addEventListener('click', (e) => { if (!e.target.closest('.chip')) { scnFlowFilter = sc.flowRef; active = '场景验收'; sync(); } });
+        map3.appendChild(row);
+      }
+      side.appendChild(map3);
+    }
+    const map5 = h('div', { class: 'mapsec' }); map5.appendChild(h('div', { class: 'h', text: '事件日志 · 实时' }));
+    const lb = h('div', { class: 'logbox', id: 'evlogbox' }); renderLog(lb); map5.appendChild(lb); side.appendChild(map5);
+    if (trace.length) side.appendChild(h('p', { class: 'note', text: '轨迹：' + trace.join(' → ') }));
+    wrapEl.appendChild(side); main.appendChild(wrapEl);
+    // 自动转移（transition.autoMs——模拟云端回调/系统事件）
+    const autoTr = (C.transitions || []).find((t) => t.from === curState && t.autoMs);
+    if (autoTr && !annMode) {
+      const ms = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 250 : autoTr.autoMs;
+      autoTimer = setTimeout(() => { if (active === '原型' && curState === autoTr.from && !annMode) { logEv('sys', '⏱ 自动转移触发：' + autoTr.id); go(autoTr.id); } }, ms);
+    }
+  }
+  function playDemo(sc) {
+    if (annMode) { say('请先关闭批注模式'); return; }
+    curFlow = sc.flowRef; curState = entryOf(curFlow); trace = []; active = '原型'; sync();
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const delay = reduce ? 80 : 900;
+    let i = 0;
+    logEv('sys', '▶ 演示走查开始：' + sc.id);
+    const step = () => { if (i >= sc.demoPath.length) { say('演示完成：' + sc.id); logEv('sys', '演示完成：' + sc.id); return; } go(sc.demoPath[i++]); setTimeout(step, delay); };
+    setTimeout(step, delay);
+  }
+  function go(trId) { const tr = (C.transitions || []).find((t) => t.id === trId); if (!tr || tr.from !== curState) { say('转移不可用：' + trId); return; } trace.push(tr.id); logEv('tr', tr.id + '：' + tr.trigger + ' → ' + tr.to + '｜' + (tr.result || '')); for (const [k, v] of Object.entries(tr.metrics || {})) logEv('sys', '计数 ' + k + ' +' + v); curState = tr.to; sync(); say(tr.result || tr.id); }
+
+  // ── 视图三：场景验收（筛选 + 场景卡片 + 一键跳原型）
+  function renderScenarios() {
+    main.appendChild(h('p', { class: 'note', text: 'Given/When/Then 与 verify 来自合同；推导状态按 fingerprint 现算（与 spec.mjs 同规），冲突以 spec.mjs 为准。点「▶ 原型」直达该场景锚定的状态。' }));
+    const bar = h('div', { class: 'filterbar' });
+    const fsel = h('select');
+    fsel.appendChild(h('option', { value: '', text: '全部流' }));
+    for (const f of C.flows || []) { const o = h('option', { value: f.id, text: f.title }); if (f.id === scnFlowFilter) o.setAttribute('selected', ''); fsel.appendChild(o); }
+    fsel.addEventListener('change', () => { scnFlowFilter = fsel.value; sync(); });
+    bar.appendChild(fsel);
+    const kinds = [...new Set((C.scenarios || []).map((x) => (x.verification || {}).kind))];
+    for (const k of kinds) {
+      const kb = h('span', { class: 'schip' + (scnKindFilter === k ? ' act' : ''), text: 'verify:' + k });
+      kb.addEventListener('click', () => { scnKindFilter = scnKindFilter === k ? '' : k; sync(); });
+      bar.appendChild(kb);
+    }
+    main.appendChild(bar);
+    const list = (C.scenarios || []).filter((x) => (!scnFlowFilter || x.flowRef === scnFlowFilter) && (!scnKindFilter || (x.verification || {}).kind === scnKindFilter));
+    if (!list.length) {
+      const emp = h('div', { class: 'empty' }, '当前筛选下没有场景。');
+      const clr = h('button', { text: '清除筛选' });
+      clr.addEventListener('click', () => { scnFlowFilter = ''; scnKindFilter = ''; sync(); });
+      emp.appendChild(h('div', null, clr));
+      main.appendChild(emp);
+    }
+    for (const sc of list) {
+      const v = sc.verification || {};
+      const card = h('div', { class: 'scncard', 'data-spec-id': sc.id });
+      const head = h('h2', null, chip(sc.id), chip(sc.flowRef),
+        h('span', { class: 'tag pending', text: 'verify:' + (v.kind || '?') }),
+        v.command ? h('span', { class: 'tag aligned', text: '命令已冻结' }) : h('span', { class: 'tag pending', text: '未冻结' }),
+        stTag(scnDerived(sc)));
+      const jb = h('button', { class: 'jump', text: '▶ 原型' });
+      jb.addEventListener('click', () => { curFlow = sc.flowRef; curState = (sc.stateRefs || [])[0] || entryOf(sc.flowRef); trace = []; active = '原型'; sync(); say('已定位 ' + (curState || '')); });
+      head.appendChild(jb);
+      if ((sc.demoPath || []).length) {
+        const db2 = h('button', { class: 'jump', text: '▶ 演示走查' });
+        db2.addEventListener('click', () => playDemo(sc));
+        head.appendChild(db2);
+      }
+      card.appendChild(head);
+      for (const g of sc.given || []) card.appendChild(h('div', { class: 'gwt2' }, h('b', { text: '假如' }), g));
+      card.appendChild(h('div', { class: 'gwt2' }, h('b', { text: '当　' }), sc.when || ''));
+      for (const t of sc.then || []) card.appendChild(h('div', { class: 'gwt2' }, h('b', { text: '那么' }), t));
+      if ((sc.examples || []).length) {
+        const exr = h('div', { class: 'schips' });
+        for (const ex of sc.examples) exr.appendChild(h('span', { class: 'schip', 'data-spec-id': ex.id, text: ex.id + ' ' + JSON.stringify(ex.values) }));
+        card.appendChild(exr);
+      }
+      main.appendChild(card);
+    }
+    const reqCard = h('div', { class: 'card' });
+    reqCard.appendChild(h('h2', { text: '需求追踪' }));
+    for (const r of C.requirements || []) {
+      reqCard.appendChild(h('div', { class: 'row', 'data-spec-id': r.id }, chip(r.id), r.text,
+        h('span', { class: 'muted', text: '场景: ' + ((r.scenarioRefs || []).join(', ') || (r.waiver ? 'waived: ' + r.waiver.reason : '未覆盖')) })));
+    }
+    main.appendChild(reqCard);
+  }
+
+  // ── 视图四：运行与证据
+  function renderRuns() {
+    main.appendChild(h('p', { class: 'note', text: 'run 由 spec.mjs record-run 亲自执行产生；「历史」= 场景语义或命令已变、不参与当前状态。' }));
+    if (!(L.runs || []).length) { main.appendChild(h('div', { class: 'card' }, h('p', { class: 'muted', text: '暂无运行记录。实现后对账阶段由 spec.mjs record-run 回填。' }))); return; }
+    for (const r of [...(L.runs || [])].reverse()) {
+      const ap = applicable(r);
+      const card = h('div', { class: 'card', 'data-spec-id': r.id });
+      card.appendChild(h('h2', null, chip(r.id), '→', chip(r.scenarioRef), stTag(r.result),
+        ap === false ? h('span', { class: 'tag hist', text: '历史' }) : ap === true ? h('span', { class: 'tag aligned', text: '适用' }) : null,
+        r.dirty ? h('span', { class: 'tag partial', text: 'dirty' }) : null));
+      card.appendChild(h('div', { class: 'row' }, h('span', { class: 'mono', text: '$ ' + (r.cmd || '') })));
+      card.appendChild(h('div', { class: 'row' }, h('span', { class: 'muted', text: `exit=${r.exitCode} · ${r.at} · gitHead=${(r.gitHead || '').slice(0, 9)}${r.testCount != null ? ' · tests=' + r.testCount : ''}${r.deviceSerial ? ' · 设备=' + r.deviceSerial + '/' + (r.buildVariant || '') : ''}` })));
+      for (const er of r.exampleResults || []) card.appendChild(h('div', { class: 'row' }, chip(er.exampleRef), stTag(er.result)));
+      const dt = h('details', { class: 'ev' }, h('summary', { text: '证据（' + (r.evidence || []).length + '）与输出摘录' }));
+      for (const ev of r.evidence || []) dt.appendChild(h('div', { class: 'row' }, h('span', { class: 'mono', text: ev.path }), h('span', { class: 'muted', text: (ev.type || '') + ' · ' + (ev.size || 0) + 'B · ' + (ev.sha256 || '').slice(0, 16) + '…' })));
+      dt.appendChild(h('pre', { class: 'mono', text: (r.outputExcerpt || '').slice(0, 1200) }));
+      card.appendChild(dt);
+      main.appendChild(card);
+    }
+    if ((L.recoveries || []).length) {
+      const card = h('div', { class: 'card' }); card.appendChild(h('h2', { text: 'recovery 审计' }));
+      for (const rc of L.recoveries) card.appendChild(h('div', { class: 'row' }, h('span', { class: 'muted', text: `${rc.at} · ${rc.reason} · from r${rc.fromRevision} → ${rc.diffSummary}` })));
+      main.appendChild(card);
+    }
+  }
+
+  // ── 批注层（本地暂存 + 导出；合并回合同 = spec.mjs merge-feedback，proposed 会阻断 acceptance）
+  const AKEY = 'mas-ann:' + ((C.meta && C.meta.id) || '?');
+  const drafts = () => { try { return JSON.parse(localStorage.getItem(AKEY) || '[]'); } catch (_) { return []; } };
+  const saveDrafts = (a) => { localStorage.setItem(AKEY, JSON.stringify(a)); refreshAnn(); paintPins(); };
+  const allIds = () => { const ids = []; for (const k of ['sources', 'flows', 'states', 'transitions', 'requirements', 'scenarios', 'issues']) for (const x of C[k] || []) { ids.push(x.id); if (k === 'scenarios') for (const ex of x.examples || []) ids.push(ex.id); } for (const k of ['runs', 'acceptances', 'sourceObservations', 'annotations']) for (const x of L[k] || []) if (x.id) ids.push(x.id); return ids; };
+  function annotateAt(id) { pendingTarget = id; panel.classList.add('open'); refreshAnn(); say('已锚定 ' + id); }
+  function paintPins() {
+    document.querySelectorAll('.annpin').forEach((el) => el.remove());
+    const set = new Set([...drafts().map((d) => d.targetId), ...(L.annotations || []).filter((a) => a.status === 'proposed').map((a) => a.targetId)]);
+    if (!set.size) return;
+    document.querySelectorAll('[data-spec-id]').forEach((el) => {
+      if (el.classList.contains('chip') || el.closest('.annpanel') || el.namespaceURI === 'http://www.w3.org/2000/svg') return;
+      if (set.has(el.getAttribute('data-spec-id'))) { const sp = h('span', { class: 'annpin', title: '此处有批注' }); sp.appendChild(mkIcon(PIN_D)); el.appendChild(sp); }
+    });
+  }
+  const fab = h('button', { class: 'annfab', 'aria-label': '打开批注面板', title: '批注（本地暂存，导出后由 agent 合并）' });
+  const panel = h('div', { class: 'annpanel' });
+  document.body.appendChild(fab); document.body.appendChild(panel);
+  fab.addEventListener('click', () => { panel.classList.toggle('open'); refreshAnn(); });
+  function refreshAnn() {
+    const ds = drafts(); const ledgerAnns = L.annotations || [];
+    fab.textContent = ''; fab.appendChild(mkIcon(NOTE_D)); fab.appendChild(document.createTextNode('批注')); fab.appendChild(h('span', { class: 'cnt', text: String(ds.length + ledgerAnns.filter((a) => a.status === 'proposed').length) }));
+    panel.textContent = '';
+    const closeBtn = h('button', { class: 'chip', 'aria-label': '关闭批注面板', text: '关闭 ✕' }); closeBtn.addEventListener('click', () => panel.classList.remove('open'));
+    panel.appendChild(h('h2', null, '批注', closeBtn));
+    panel.appendChild(h('p', { class: 'note', text: '推荐：开「📌 批注模式」后直接点击页面上要评的元素（Figma 评论钉式）。本地暂存不等于已入合同：导出后交 agent merge-feedback 合并为 proposed，acceptance 前必须逐条裁决。' }));
+    panel.appendChild(h('label', { text: '锚点 ID' }));
+    const inp = h('input', { list: 'ann-ids', placeholder: '开批注模式点击页面元素自动填入；也可手输' });
+    if (pendingTarget) inp.value = pendingTarget;
+    const dl = h('datalist', { id: 'ann-ids' }); for (const id of allIds()) dl.appendChild(h('option', { value: id }));
+    panel.appendChild(inp); panel.appendChild(dl);
+    panel.appendChild(h('label', { text: '批注内容' }));
+    const ta = h('textarea', { placeholder: '这里写你的评审意见…' });
+    panel.appendChild(ta);
+    panel.appendChild(h('label', { text: '修改建议（可选——你希望改成什么样；采纳后由 agent 落进合同）' }));
+    const tp = h('textarea', { placeholder: '例：SCN-drag-local 的 Then 应加上「拖动中隐藏对比按钮」' });
+    panel.appendChild(tp);
+    const btns = h('div', { class: 'annbtns' });
+    const addB = h('button', { class: 'pri', text: '暂存批注' });
+    addB.addEventListener('click', () => {
+      const t = inp.value.trim(), c = ta.value.trim();
+      if (!t || !c) { say('锚点与内容都要填'); return; }
+      if (!allIds().includes(t)) { say('锚点不是合同内的稳定 ID'); return; }
+      const d0 = { targetId: t, comment: c, at: new Date().toISOString(), revision: STAMP.revision };
+      if (tp.value.trim()) d0.proposal = tp.value.trim();
+      saveDrafts([...drafts(), d0]); pendingTarget = '';
+      inp.value = ''; ta.value = ''; tp.value = ''; say('已暂存（本地）');
+    });
+    const expB = h('button', { text: '导出 JSON（复制）' });
+    expB.addEventListener('click', () => {
+      const payload = JSON.stringify({ specId: (C.meta || {}).id, revision: STAMP.revision, annotations: drafts() }, null, 2);
+      try { navigator.clipboard.writeText(payload); say('已复制——粘给 agent 跑 merge-feedback'); } catch (_) { const ta2 = h('textarea', { text: payload }); document.body.appendChild(ta2); ta2.select(); document.execCommand('copy'); ta2.remove(); say('已复制'); }
+    });
+    const clrB = h('button', { text: '清空本地' });
+    clrB.addEventListener('click', () => { saveDrafts([]); say('已清空本地暂存'); });
+    btns.appendChild(addB); btns.appendChild(expB); btns.appendChild(clrB); panel.appendChild(btns);
+    const ds2 = drafts();
+    if (!ds2.length && !ledgerAnns.length) {
+      const emp = h('div', { class: 'empty' }, '还没有任何批注。');
+      const go2 = h('button', { text: '开启批注模式，点击页面元素开始评审' });
+      go2.addEventListener('click', () => { if (!annMode) annToggle.click(); panel.classList.remove('open'); });
+      emp.appendChild(h('div', null, go2));
+      panel.appendChild(emp);
+    }
+    if (ds2.length) panel.appendChild(h('label', { text: '本地暂存（未入合同）' }));
+    ds2.forEach((d, i) => {
+      const it = h('div', { class: 'annitem draft' });
+      const del = h('button', { class: 'chip', text: '删' }); del.addEventListener('click', () => { const a = drafts(); a.splice(i, 1); saveDrafts(a); });
+      it.appendChild(h('div', { class: 'meta' }, chip(d.targetId), h('span', { class: 'tag partial', text: '本地' }), del));
+      it.appendChild(h('div', { text: d.comment }));
+      if (d.proposal) it.appendChild(h('div', { class: 'muted', text: '建议改法：' + d.proposal }));
+      panel.appendChild(it);
+    });
+    if (ledgerAnns.length) panel.appendChild(h('label', { text: '合同内批注（ledger）' }));
+    for (const a of ledgerAnns) {
+      const it = h('div', { class: 'annitem' });
+      it.appendChild(h('div', { class: 'meta' }, chip(a.id), chip(a.targetId), h('span', { class: 'tag ' + (a.status === 'proposed' ? 'partial' : a.status === 'resolved' ? 'passed' : a.status === 'outdated' ? 'hist' : 'notrun'), text: a.status })));
+      it.appendChild(h('div', { text: a.comment }));
+      if (a.proposal) it.appendChild(h('div', { class: 'muted', text: '建议改法：' + a.proposal + '（采纳=用户明确同意后 agent 经 save 落合同并置 resolved）' }));
+      panel.appendChild(it);
+    }
+  }
+  refreshAnn();
+
+  sync();
+})();
+</script>
+</body>
+</html>

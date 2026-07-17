@@ -794,6 +794,7 @@ function cmdMergeFeedback(filePath, { data }) {
   if (!Array.isArray(payload.annotations) || !payload.annotations.length) throw new Error('payload 无 annotations');
   const next = txWrite(filePath, (a) => {
     if (payload.specId && payload.specId !== a.contract.meta.id) throw new Error(`payload specId(${payload.specId}) ≠ 合同(${a.contract.meta.id})`);
+    if (payload.revision != null && payload.revision < a.stamp.revision) console.warn(`警告：批注导出自 r${payload.revision}，合同现为 r${a.stamp.revision}——锚点若已失效会被 REF-01 挡下，其余请人工核对语境`);
     bumpRevision(a, 'annotation', payload.annotations.map((x) => ({ ref: x.targetId, fields: ['annotation'] })));
     for (const x of payload.annotations) {
       a.ledger.annotations.push({ id: `ANN-${a.ledger.annotations.length + 1}`, targetId: x.targetId, comment: x.comment, ...(x.proposal ? { proposal: x.proposal } : {}), status: 'proposed' });

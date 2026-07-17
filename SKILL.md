@@ -61,10 +61,12 @@ disable-model-invocation: true
 | `review [--timeout ms] [--port n] [--no-open]` | 本地评审会话：浏览器批注一键直达 agent（阻塞至提交，落盘 feedback-N.json） |
 | `merge-feedback --data` / `annotate --id --status` | 批注工单合并 / 代录用户裁决 |
 | `accept --verbatim "用户原话"` | 写 acceptance 事实（硬前置由 validator 挡门） |
+| `progress [--stage] [--next] [--worth-it] [--current-flow]` | 写进度/自评块（非可信块，不动 revision——收尾 worthIt 用它，别手改 HTML） |
 | `recovery --reason` | 从最近 gate commit 可信基线重建 |
 | `export-md [--out]` | 降级导出便携 Markdown（权威仍是 HTML） |
 
 ## 自检与存活
 
 - 改 `spec.mjs`/`template.html` 后必须跑 `node scripts/run-fixtures.mjs` 与 `node scripts/run-injections.mjs`，**双双全绿**才算改完。
-- 每次运行结束在 progress 块写一行「本次值不值 + 实际分钟数」（收尾写入，在 gate 之后合法——against-git 只要求链连续）。死刑条款：连续两次真实需求绕开本 skill 或自评为亏 → 砍当次最贵环节；再犯退役本 skill。
+- 每次运行结束用 `progress --worth-it` 写一行「本次值不值 + 实际分钟数」（收尾写入，在 gate 之后合法——against-git 只要求链连续）。
+- **远程来源先快照**：Confluence/Jira 等远端 PRD 先落地为产物旁 `sources/` 下的本地文件、以快照路径登记 locator（原始 URL 写进 role/version）——file adapter 可观测、证据可核，远端原文变更由重新快照 + refresh-sources 显形。死刑条款：连续两次真实需求绕开本 skill 或自评为亏 → 砍当次最贵环节；再犯退役本 skill。

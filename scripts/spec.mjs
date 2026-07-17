@@ -805,6 +805,18 @@ function cmdMergeFeedback(filePath, { data }) {
   console.log(`merge-feedback：合并 ${payload.annotations.length} 条为 proposed（r${next.stamp.revision}）；acceptance 前必须逐条裁决（resolved/rejected）`);
 }
 
+// ── progress：进度/自评写入（progress 块不入 envelope，不 bump revision、不进 changelog）
+function cmdProgress(filePath, opts) {
+  const fields = {};
+  if (opts.stage !== undefined) fields.stage = opts.stage;
+  if (opts.next !== undefined) fields.nextAction = opts.next;
+  if (opts.worthIt !== undefined) fields.worthIt = opts.worthIt;
+  if (opts.currentFlow !== undefined) fields.currentFlow = opts.currentFlow === 'null' ? null : opts.currentFlow;
+  if (!Object.keys(fields).length) throw new Error('用法：spec.mjs progress <path> [--stage s] [--next 文本] [--worth-it 文本] [--current-flow FLOW-x|null]');
+  const next = txWrite(filePath, (a) => { a.progress = { ...(a.progress || {}), ...fields, updatedAt: new Date().toISOString() }; return a; });
+  console.log(`progress 已更新（revision 保持 r${next.stamp.revision}——progress 非可信块，不入 envelope/changelog）`);
+}
+
 // ── review：本地评审会话（借鉴 lavish-axi 的 AXI 形态：前台阻塞长轮询、队列落盘永不丢反馈、Send & End 结束会话）
 // 产物字节零改动、零注入：批注 UI 是引擎自带的（点击即锚→localStorage 暂存），wrapper 页与产物同源共享 localStorage，
 // 由 wrapper（自带宽松 CSP）代为 POST——产物自身的 default-src 'none' 完全不动。
@@ -953,6 +965,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     else if (cmd === 'annotate') cmdAnnotate(pos[0], opts);
     else if (cmd === 'export-md') cmdExportMd(pos[0], opts);
     else if (cmd === 'review') await cmdReview(pos[0], opts);
+    else if (cmd === 'progress') cmdProgress(pos[0], opts);
     else { console.log('用法：spec.mjs <new|extract|save|status|validate|refresh-sources|recovery|confirm-command|record-run|accept|review> <path> [选项]'); process.exitCode = 2; }
   } catch (e) { console.error(`错误：${e.message}`); process.exitCode = 1; }
 }

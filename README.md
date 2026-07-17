@@ -165,6 +165,10 @@ evals/                   # fresh-agent behavioral evals + input fixtures
 agents/openai.yaml       # interface metadata for non-Claude agent runtimes
 ```
 
+## Field notes — first production run
+
+2026-07: the first real production requirement (a P0 mobile-app feature) went from intake to fully aligned spec in **~40 minutes** including live review Q&A: 5 flows, 17 BDD scenarios (manual / db / grep judges), 4 user adjudications recorded verbatim into the contract. Building the state machine surfaced **one self-contradiction inside the PRD** and **three naming inconsistencies** across PRD / Figma / history copy — before a single line of code was written. Reconciliation (STOP ②) runs after implementation; this section will be updated with the full-loop reading.
+
 ## License
 
 [MIT](LICENSE)

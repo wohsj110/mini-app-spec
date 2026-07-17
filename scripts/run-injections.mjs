@@ -192,6 +192,17 @@ ok('T17 resume：status 一条命令出恢复简报', r.status === 0 && r.stdout
   ok('T22 review 队列 → merge-feedback 闭环 proposed', r.status === 0 && r.stdout.includes('proposed'));
 }
 
+// ── progress：非可信块写入不动 revision/envelope
+{
+  const revBefore = JSON.parse(run(['extract', 'spec.html', '--out', 'x.json']).status === 0 ? fs.readFileSync('spec.html', 'utf8').match(/"revision":\s*(\d+)/)[0].split(':')[1] : '0');
+  r = run(['progress', 'spec.html', '--stage', 'aligned', '--worth-it', '值·测试写入']);
+  const revAfter = Number(fs.readFileSync('spec.html', 'utf8').match(/"revision":\s*(\d+)/)[0].split(':')[1]);
+  const st = run(['status', 'spec.html']);
+  ok('T23 progress 命令写入且 revision 不动', r.status === 0 && Number(revBefore) === revAfter && st.stdout.includes('aligned'));
+  r = run(['validate', 'spec.html']);
+  ok('T24 progress 写入后 envelope 校验仍 0 error', r.status === 0);
+}
+
 console.log(`\n${fail === 0 ? 'ALL PASS' : 'FAILED'}: ${pass} 通过 / ${fail} 失败`);
 console.log(`临时目录：${T}`);
 process.exit(fail ? 1 : 0);

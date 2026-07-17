@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { execFileSync, execSync, spawnSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const SPEC = path.join(path.dirname(fileURLToPath(import.meta.url)), 'spec.mjs');
 const T = fs.mkdtempSync(path.join(os.tmpdir(), 'mas-inject-'));
@@ -171,6 +171,26 @@ fs.unlinkSync('spec.html.lock');
 const t0 = Date.now();
 r = run(['status', 'spec.html']);
 ok('T17 resume：status 一条命令出恢复简报', r.status === 0 && r.stdout.includes('五元组') && r.stdout.includes('progress'), `${Date.now() - t0}ms`);
+
+// ── 第五组：review 评审会话（零改写转发 / 提交落盘唤醒 / merge 闭环）
+{
+  const mod = await import(pathToFileURL(SPEC).href);
+  const s = await mod.startReviewServer(path.join(T, 'spec.html'));
+  const base = `http://127.0.0.1:${s.port}`;
+  const disk = fs.readFileSync(path.join(T, 'spec.html'));
+  const served = Buffer.from(await (await fetch(base + '/artifact')).arrayBuffer());
+  ok('T18 review /artifact 逐字节零改写', Buffer.compare(disk, served) === 0);
+  const wrapperTxt = await (await fetch(base + '/')).text();
+  ok('T19 wrapper 绑定 specId 暂存键', wrapperTxt.includes('mas-ann:FEAT-inj'));
+  const post = await fetch(base + '/submit', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ end: true, annotations: [{ targetId: 'SCN-1', comment: '评审意见', proposal: '建议改法' }, { targetId: '', comment: '无锚应被滤掉' }] }) });
+  const sub = await s.waitForSubmission();
+  ok('T20 submit 过滤无效项、落盘队列并唤醒等待者', post.ok && sub.count === 1 && sub.end === true && !!sub.feedbackPath && fs.existsSync(sub.feedbackPath));
+  await s.close();
+  const fb = JSON.parse(fs.readFileSync(sub.feedbackPath, 'utf8'));
+  ok('T21 队列文件含 specId+revision 上下文', fb.specId === 'FEAT-inj' && typeof fb.revision === 'number' && fb.annotations[0].proposal === '建议改法');
+  r = run(['merge-feedback', 'spec.html', '--data', sub.feedbackPath]);
+  ok('T22 review 队列 → merge-feedback 闭环 proposed', r.status === 0 && r.stdout.includes('proposed'));
+}
 
 console.log(`\n${fail === 0 ? 'ALL PASS' : 'FAILED'}: ${pass} 通过 / ${fail} 失败`);
 console.log(`临时目录：${T}`);

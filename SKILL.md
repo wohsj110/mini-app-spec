@@ -45,6 +45,8 @@ disable-model-invocation: true
 
 📌 批注锚定任意稳定 ID、可携带修改建议 proposal → 导出 JSON 即**结构化修改工单** → `merge-feedback` 合并为 proposed（**阻断 acceptance**）→ 用户逐条裁决：采纳 ⇒ agent 经 save 落合同并 `annotate --status resolved`；不采纳 ⇒ rejected，proposal 原文保留。同步零散意见走聊天说短 ID 即可，批注留给批量/异步/需闭环保证的评审。
 
+**评审直通车**：`review` 起本地会话（回环地址、产物零改写）——用户页内批注后点「Submit to agent」，命令即返回队列文件路径接 `merge-feedback`，免导出免复制。前台阻塞等待（Bash 侧给足 timeout）；被杀/超时**重跑即可，已提交队列落盘不丢**；用户点「Send & End」= 会话结束，未经邀请不重开。
+
 ## 命令速查（语义详见 contract.md）
 
 | 命令 | 用途 |
@@ -56,6 +58,7 @@ disable-model-invocation: true
 | `confirm-command --scenario --command` | verification gate：冻结验证命令 |
 | `record-run --scenario [db 场景须设备三参]` | 亲跑取证（判定器 assert/db/file/grep） |
 | `refresh-sources` | 生成完整来源观测批次（acceptance/对账前强制）；file adapter 先行——远程来源（Figma/Confluence）观测为 unavailable，验收时须逐来源 sourceWaiver |
+| `review [--timeout ms] [--port n] [--no-open]` | 本地评审会话：浏览器批注一键直达 agent（阻塞至提交，落盘 feedback-N.json） |
 | `merge-feedback --data` / `annotate --id --status` | 批注工单合并 / 代录用户裁决 |
 | `accept --verbatim "用户原话"` | 写 acceptance 事实（硬前置由 validator 挡门） |
 | `recovery --reason` | 从最近 gate commit 可信基线重建 |

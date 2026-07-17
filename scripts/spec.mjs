@@ -6,6 +6,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import http from 'node:http';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 
@@ -804,6 +805,82 @@ function cmdMergeFeedback(filePath, { data }) {
   console.log(`merge-feedback：合并 ${payload.annotations.length} 条为 proposed（r${next.stamp.revision}）；acceptance 前必须逐条裁决（resolved/rejected）`);
 }
 
+// ── review：本地评审会话（借鉴 lavish-axi 的 AXI 形态：前台阻塞长轮询、队列落盘永不丢反馈、Send & End 结束会话）
+// 产物字节零改动、零注入：批注 UI 是引擎自带的（点击即锚→localStorage 暂存），wrapper 页与产物同源共享 localStorage，
+// 由 wrapper（自带宽松 CSP）代为 POST——产物自身的 default-src 'none' 完全不动。
+export function startReviewServer(filePath, { port = 0 } = {}) {
+  const abs = path.resolve(filePath);
+  const dir = path.dirname(abs);
+  const a = parseArtifact(fs.readFileSync(abs, 'utf8'));
+  const specId = a.contract.meta.id, revision = a.stamp.revision, title = a.contract.meta.title;
+  let resolveSub; const submitted = new Promise((r) => { resolveSub = r; });
+  const nextFeedbackPath = () => { let n = 1; while (fs.existsSync(path.join(dir, `feedback-${n}.json`))) n++; return path.join(dir, `feedback-${n}.json`); };
+  const wrapper = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Review · ${title}</title><style>
+  body{margin:0;background:#0b0e14;color:#e6ebf4;font:14px -apple-system,sans-serif;display:flex;flex-direction:column;height:100vh}
+  .bar{display:flex;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid #232b3d;background:#151a26}
+  .bar b{color:#5eead4}.bar .sp{flex:1}.cnt{background:#1a2130;border:1px solid #232b3d;border-radius:12px;padding:2px 10px}
+  button{background:#1a2130;color:#e6ebf4;border:1px solid #232b3d;border-radius:8px;padding:6px 14px;cursor:pointer;font-size:13px}
+  button:hover{border-color:#5eead4}button.pri{border-color:#5eead4;color:#5eead4}
+  iframe{border:0;flex:1;width:100%}.msg{color:#8b95a9;font-size:12px}</style></head><body>
+  <div class="bar"><b>📝 Review mode</b><span>${title}</span><span class="cnt" id="cnt">0 drafts</span><span class="msg">annotate inside the page (📌 Annotate → click elements), then submit</span><span class="sp"></span>
+  <button class="pri" id="send">Submit to agent</button><button id="sendEnd">Submit &amp; End</button></div>
+  <iframe src="/artifact"></iframe>
+  <script>
+  const KEY='mas-ann:${specId}';
+  const drafts=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return[]}};
+  setInterval(()=>{document.getElementById('cnt').textContent=drafts().length+' drafts'},800);
+  async function send(end){const ds=drafts();if(!ds.length&&!end){alert('No staged annotations yet — turn on 📌 Annotate inside the page and click an element.');return}
+    const r=await fetch('/submit',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({end,annotations:ds})});
+    if(r.ok){localStorage.setItem(KEY,'[]');document.getElementById('cnt').textContent='0 drafts';
+      document.getElementById('send').textContent=end?'Session ended':'Submitted ✓';setTimeout(()=>{document.getElementById('send').textContent='Submit to agent'},1500);
+      if(end)document.body.innerHTML='<p style="padding:40px;color:#8b95a9">Session ended. Feedback delivered to the agent — you can close this tab.</p>'}}
+  document.getElementById('send').onclick=()=>send(false);document.getElementById('sendEnd').onclick=()=>send(true);
+  </script></body></html>`;
+  const srv = http.createServer((req, res) => {
+    const u = new URL(req.url, 'http://x');
+    if (u.pathname === '/') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); res.end(wrapper); return; }
+    if (u.pathname === '/artifact') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); res.end(fs.readFileSync(abs)); return; } // 每次读盘原样转发，零改写
+    if (u.pathname === '/submit' && req.method === 'POST') {
+      let body = ''; req.on('data', (c) => { body += c; if (body.length > 2 * 1024 * 1024) req.destroy(); });
+      req.on('end', () => {
+        try {
+          const p0 = JSON.parse(body || '{}');
+          const anns = (Array.isArray(p0.annotations) ? p0.annotations : []).filter((x) => x && x.targetId && x.comment)
+            .map((x) => ({ targetId: String(x.targetId), comment: String(x.comment), ...(x.proposal ? { proposal: String(x.proposal) } : {}) }));
+          let fp = null;
+          if (anns.length) { fp = nextFeedbackPath(); fs.writeFileSync(fp, JSON.stringify({ specId, revision, annotations: anns }, null, 2)); }
+          res.writeHead(200, { 'content-type': 'application/json' }); res.end('{"ok":true}');
+          resolveSub({ feedbackPath: fp, count: anns.length, end: !!p0.end });
+        } catch (e) { res.writeHead(400); res.end(String(e.message)); }
+      });
+      return;
+    }
+    res.writeHead(404); res.end();
+  });
+  return new Promise((resolve) => srv.listen(port, '127.0.0.1', () => resolve({
+    port: srv.address().port, specId, revision,
+    waitForSubmission: () => submitted,
+    close: () => new Promise((r) => { srv.closeAllConnections?.(); srv.close(() => r()); }),
+  })));
+}
+
+async function cmdReview(filePath, opts) {
+  const timeoutMs = Number(opts.timeout ?? 540000);
+  const pending = fs.readdirSync(path.dirname(path.resolve(filePath))).filter((f) => /^feedback-\d+\.json$/.test(f));
+  if (pending.length) console.log(`提示：目录下已有未消费的反馈队列 ${pending.join(', ')}（队列不丢——可先 merge-feedback 处理）`);
+  const s = await startReviewServer(filePath, { port: Number(opts.port ?? 0) });
+  const url = `http://127.0.0.1:${s.port}/`;
+  console.log(`review：${url}（r${s.revision}，产物零改写，仅回环地址）\n等待用户在浏览器里提交批注……被杀/超时直接重跑即可，已提交的队列永不丢失。`);
+  if (!opts.noOpen && process.platform === 'darwin') { try { execFileSync('open', [url]); } catch (_) { } }
+  const timer = setTimeout(() => { console.log(`review：${timeoutMs / 1000}s 内无提交，本次退出（重跑继续等；浏览器里的本地暂存不受影响）`); process.exit(2); }, timeoutMs);
+  const sub = await s.waitForSubmission();
+  clearTimeout(timer); await s.close();
+  if (sub.count) console.log(`收到 ${sub.count} 条批注 → ${sub.feedbackPath}\n下一步：node spec.mjs merge-feedback ${filePath} --data ${sub.feedbackPath}`);
+  if (sub.end) console.log('用户已 Send & End：会话结束，未经邀请不要重开评审。');
+  else if (!sub.count) console.log('收到空提交（无批注）。');
+  process.exit(0); // 浏览器侧可能残留 keep-alive 连接，显式退出保证前台阻塞调用干净返回
+}
+
 function cmdExportMd(filePath, { out }) {
   const a = parseArtifact(fs.readFileSync(filePath, 'utf8'));
   const c = a.contract, d = deriveStatus({ contract: c, ledger: a.ledger });
@@ -875,6 +952,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     else if (cmd === 'merge-feedback') cmdMergeFeedback(pos[0], opts);
     else if (cmd === 'annotate') cmdAnnotate(pos[0], opts);
     else if (cmd === 'export-md') cmdExportMd(pos[0], opts);
-    else { console.log('用法：spec.mjs <new|extract|save|status|validate|refresh-sources|recovery|confirm-command|record-run|accept> <path> [选项]'); process.exitCode = 2; }
+    else if (cmd === 'review') await cmdReview(pos[0], opts);
+    else { console.log('用法：spec.mjs <new|extract|save|status|validate|refresh-sources|recovery|confirm-command|record-run|accept|review> <path> [选项]'); process.exitCode = 2; }
   } catch (e) { console.error(`错误：${e.message}`); process.exitCode = 1; }
 }

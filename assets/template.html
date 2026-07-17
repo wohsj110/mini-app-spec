@@ -163,17 +163,113 @@ body.hidenotes .stage .notepin{display:none}
 </head>
 <body>
 <div id="app"></div>
-<script id="mini-app-engine" data-engine-version="0.13.1">
+<script id="mini-app-engine" data-engine-version="0.14.0">
 (function () {
   'use strict';
   const readJson = (id) => { const el = document.getElementById(id); return el ? JSON.parse(el.textContent) : null; };
   const wrapData = readJson('mini-app-contract') || {};
   const C = wrapData.contract || {}; const L = readJson('mini-app-ledger') || {}; const STAMP = readJson('mini-app-stamp') || {};
   const app = document.getElementById('app');
-  const h = (tag, attrs, ...kids) => { const el = document.createElement(tag); for (const [k, v] of Object.entries(attrs || {})) { if (k === 'class') el.className = v; else if (k === 'text') el.textContent = v; else el.setAttribute(k, v); } for (const kid of kids.flat()) if (kid) el.appendChild(typeof kid === 'string' ? document.createTextNode(kid) : kid); return el; };
+  // ── i18n：引擎 UI 语言（?lang= > localStorage > 浏览器语言，非中文环境默认英文）。只翻引擎自身文案；合同内容语言由 spec 作者决定，原样展示。
+  const UI_LANG = (() => { try { const q = new URLSearchParams(location.search).get('lang'); if (q === 'zh' || q === 'en') return q; const s = localStorage.getItem('mas-ui-lang'); if (s === 'zh' || s === 'en') return s; } catch (_) { } return ((navigator.language || '').toLowerCase().indexOf('zh') === 0) ? 'zh' : 'en'; })();
+  const EN = {
+    '点击复制 ID（批注模式下=锚定批注）': 'Click to copy ID (annotation mode: anchors an annotation)',
+    '已复制——粘给 agent 跑 merge-feedback': 'Copied — paste to your agent to run merge-feedback',
+    '已复制 ': 'Copied ', '已复制': 'Copied',
+    '（浏览器无法算指纹，以 spec.mjs status 为准）': '(browser cannot compute fingerprints; spec.mjs status is authoritative)',
+    '计算中…': 'computing…',
+    '草稿 · 未对账': 'draft · not reconciled',
+    'run 覆盖 ': 'run coverage ', ' · 开放 issues ': ' · open issues ',
+    ' · 完整性锚与权威判定以 spec.mjs validate --against-git / status 为准': ' · integrity anchor & authoritative verdicts: spec.mjs validate --against-git / status',
+    '流总览': 'Flow Map', '场景验收': 'Scenarios', '运行证据': 'Run Evidence',
+    '开启后：点击页面任何元素即锚定批注（原型导航暂停）': 'When on: click any element to anchor an annotation (prototype navigation pauses)',
+    '批注模式：点击任意元素锚定批注': 'Annotation mode: click any element to anchor an annotation',
+    '批注模式已关闭': 'Annotation mode off',
+    '批注模式': 'Annotate',
+    '实线=default 主路径 · 虚线=guard 分支 · ▶=入口 · 双框=终态 · 点节点跳原型；图=无限画布（拖拽平移 · 滚轮缩放 · 双击/「适配」复位）。反馈主通道：聊天里说短 ID（点击可复制）。': 'Solid = default path · dashed = guard branch · ▶ = entry · double frame = terminal · click a node to jump into the prototype. Infinite canvas (drag to pan · wheel to zoom · double-click / "Fit" to reset). Main feedback channel: say the short ID in chat (click to copy).',
+    '高不确定': 'high-uncertainty', '低风险': 'low-risk', '已对齐': 'aligned', '待对齐': 'pending',
+    '缩放至适配': 'Zoom to fit', '缩小': 'Zoom out', '放大': 'Zoom in', '适配': 'Fit',
+    '未决 issues': 'Open issues',
+    ' · 终态': ' · terminal', ' · 无图': ' · no design ref',
+    '跳到 ': 'Jump to ',
+    '（本地实时，仅内存态）': '(local realtime, memory only)',
+    '重置流程': 'Flow reset', '重置': 'Reset',
+    '（无 UI 模板：': '(no UI template: ',
+    '快照写入：': 'Snapshot written: ', '（已落库态更新）': ' (persisted state updated)',
+    '长按对比：显示原图': 'Hold-to-compare: showing original',
+    '标注点 · 区域介绍': 'Callouts · region guide', '标注点 ': 'Callout ',
+    '显示标注': 'Show callouts', '隐藏标注': 'Hide callouts',
+    '无图原因：': 'No design ref: ',
+    '终态': 'terminal',
+    '状态机 · 实时映射': 'State machine · live',
+    'live 值 · 拖动实时联动': 'Live values · react as you drag',
+    '数据流 · 内存态 vs 已落库': 'Dataflow · memory vs persisted',
+    '内存态 · 拖动即变': 'Memory · changes as you drag',
+    '已落库 · 松手写入': 'Persisted · written on release',
+    '（尚无落位记录）': '(nothing persisted yet)',
+    '可用转移（点原型内控件或下方按钮）：': 'Available transitions (tap controls in the prototype or buttons below):',
+    's 自动': 's auto',
+    '本状态的验收场景': 'Scenarios anchored to this state',
+    '事件日志 · 实时': 'Event log · live',
+    '轨迹：': 'Trace: ',
+    '⏱ 自动转移触发：': '⏱ auto transition fired: ',
+    '请先关闭批注模式': 'Turn off annotation mode first',
+    '▶ 演示走查开始：': '▶ walkthrough started: ',
+    '▶ 演示走查': '▶ Walkthrough',
+    '演示完成：': 'Walkthrough finished: ',
+    '转移不可用：': 'Transition unavailable: ',
+    '计数 ': 'count ',
+    'Given/When/Then 与 verify 来自合同；推导状态按 fingerprint 现算（与 spec.mjs 同规），冲突以 spec.mjs 为准。点「▶ 原型」直达该场景锚定的状态。': 'Given/When/Then and verify come from the contract; derived status is computed live by fingerprint (same rules as spec.mjs; spec.mjs wins on conflict). Click "▶ Prototype" to jump to the scenario\'s anchored state.',
+    '全部流': 'All flows',
+    '当前筛选下没有场景。': 'No scenarios match the current filter.',
+    '清除筛选': 'Clear filters',
+    '命令已冻结': 'command frozen', '未冻结': 'not frozen',
+    '▶ 原型': '▶ Prototype',
+    '已定位 ': 'Jumped to ',
+    '假如': 'Given', '当　': 'When ', '那么': 'Then',
+    '需求追踪': 'Requirement tracing',
+    '场景: ': 'scenarios: ', '未覆盖': 'uncovered',
+    'run 由 spec.mjs record-run 亲自执行产生；「历史」= 场景语义或命令已变、不参与当前状态。': 'Runs are produced by spec.mjs record-run executing frozen commands itself; "historical" = scenario semantics or command changed since, excluded from current status.',
+    '暂无运行记录。实现后对账阶段由 spec.mjs record-run 回填。': 'No runs yet. The post-implementation reconciliation phase back-fills them via spec.mjs record-run.',
+    '历史': 'historical', '适用': 'applicable',
+    ' · 设备=': ' · device=',
+    '证据（': 'Evidence (', '）与输出摘录': ') & output excerpt',
+    'recovery 审计': 'Recovery audit',
+    '已锚定 ': 'Anchored ',
+    '此处有批注': 'Has annotations',
+    '打开批注面板': 'Open annotation panel',
+    '批注（本地暂存，导出后由 agent 合并）': 'Annotations (staged locally; the agent merges them after export)',
+    '关闭批注面板': 'Close annotation panel', '关闭 ✕': 'Close ✕',
+    '推荐：开「📌 批注模式」后直接点击页面上要评的元素（Figma 评论钉式）。本地暂存不等于已入合同：导出后交 agent merge-feedback 合并为 proposed，acceptance 前必须逐条裁决。': 'Tip: turn on "📌 Annotate" and click the element you want to review (Figma-style comment pin). Local drafts are NOT in the contract: export and hand to the agent — merge-feedback turns them into proposed; each must be adjudicated before acceptance.',
+    '锚点 ID': 'Anchor ID',
+    '开批注模式点击页面元素自动填入；也可手输': 'Auto-filled by clicking an element in annotation mode; manual input also works',
+    '批注内容': 'Comment',
+    '这里写你的评审意见…': 'Write your review comment here…',
+    '修改建议（可选——你希望改成什么样；采纳后由 agent 落进合同）': 'Proposal (optional — what you want it changed to; the agent lands it in the contract once accepted)',
+    '例：SCN-drag-local 的 Then 应加上「拖动中隐藏对比按钮」': 'e.g. the Then of SCN-xxx should also hide the compare button while dragging',
+    '暂存批注': 'Stage annotation',
+    '锚点与内容都要填': 'Anchor and comment are both required',
+    '锚点不是合同内的稳定 ID': 'Anchor is not a stable contract ID',
+    '已暂存（本地）': 'Staged (local)',
+    '导出 JSON（复制）': 'Export JSON (copy)',
+    '清空本地': 'Clear local',
+    '已清空本地暂存': 'Local drafts cleared',
+    '还没有任何批注。': 'No annotations yet.',
+    '开启批注模式，点击页面元素开始评审': 'Turn on annotation mode and click any element to start reviewing',
+    '本地暂存（未入合同）': 'Local drafts (not in contract)',
+    '删': 'Del', '本地': 'local',
+    '建议改法：': 'Proposal: ',
+    '合同内批注（ledger）': 'Contract annotations (ledger)',
+    '（采纳=用户明确同意后 agent 经 save 落合同并置 resolved）': '(accepted = only after explicit user approval; the agent lands it via save and marks it resolved)',
+    '批注': 'Annotations', '原型': 'Prototype',
+    '，': ', ', '。': '. ', '：': ': ', '；': '; ', '、': ', ', '「': '"', '」': '"', '（': ' (', '）': ')', '〔': ' [', '〕': ']',
+  };
+  const EN_KEYS = Object.keys(EN).sort((a, b) => b.length - a.length);
+  const T = (s) => { if (UI_LANG === 'zh' || typeof s !== 'string' || !/[　-鿿＀-￯]/.test(s)) return s; for (const k of EN_KEYS) if (s.indexOf(k) !== -1) s = s.split(k).join(EN[k]); return s; };
+  const h = (tag, attrs, ...kids) => { const el = document.createElement(tag); for (const [k, v] of Object.entries(attrs || {})) { if (k === 'class') el.className = v; else if (k === 'text') el.textContent = T(v); else if (k === 'title' || k === 'placeholder' || k === 'aria-label') el.setAttribute(k, T(v)); else el.setAttribute(k, v); } for (const kid of kids.flat()) if (kid) el.appendChild(typeof kid === 'string' ? document.createTextNode(T(kid)) : kid); return el; };
 
   const toast = h('div', { class: 'toast', role: 'status', 'aria-live': 'polite' }); document.body.appendChild(toast);
-  const say = (t) => { toast.textContent = t; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 1300); };
+  const say = (t) => { toast.textContent = T(t); toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 1300); };
   const mkIcon = (d) => { const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('class', 'icn'); svg.setAttribute('aria-hidden', 'true'); const path = document.createElementNS('http://www.w3.org/2000/svg', 'path'); path.setAttribute('d', d); svg.appendChild(path); return svg; };
   const PIN_D = 'M12 21s-6-5.4-6-10a6 6 0 1 1 12 0c0 4.6-6 10-6 10z M12 11.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z';
   const NOTE_D = 'M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z';
@@ -232,11 +328,14 @@ body.hidenotes .stage .notepin{display:none}
   }
   const views = { 流总览: renderMap, 原型: renderPlayer, 场景验收: renderScenarios, 运行证据: renderRuns };
   let active = '流总览';
-  for (const name of Object.keys(views)) { const b = h('button', { text: name }); b.addEventListener('click', () => { active = name; sync(); }); tabs.appendChild(b); }
+  for (const name of Object.keys(views)) { const b = h('button', { text: name, 'data-view': name }); b.addEventListener('click', () => { active = name; sync(); }); tabs.appendChild(b); }
   let annMode = false, pendingTarget = '';
   const annToggle = h('button', { class: 'anntoggle', 'aria-pressed': 'false', title: '开启后：点击页面任何元素即锚定批注（原型导航暂停）' }, mkIcon(PIN_D), '批注模式');
   annToggle.addEventListener('click', () => { annMode = !annMode; annToggle.classList.toggle('active', annMode); annToggle.setAttribute('aria-pressed', String(annMode)); document.body.classList.toggle('annmode', annMode); say(annMode ? '批注模式：点击任意元素锚定批注' : '批注模式已关闭'); });
   tabs.appendChild(annToggle);
+  const langBtn = h('button', { title: 'Engine UI language', text: UI_LANG === 'zh' ? 'EN' : '中文' });
+  langBtn.addEventListener('click', () => { try { localStorage.setItem('mas-ui-lang', UI_LANG === 'zh' ? 'en' : 'zh'); } catch (_) { } location.reload(); });
+  tabs.appendChild(langBtn);
   document.addEventListener('click', (e) => {
     if (!annMode) return;
     const t = e.target && e.target.closest ? e.target.closest('[data-go],[data-spec-id]') : null;
@@ -245,7 +344,7 @@ body.hidenotes .stage .notepin{display:none}
     const id = t.getAttribute('data-go') || t.getAttribute('data-spec-id');
     if (id) annotateAt(id);
   }, true);
-  function sync() { if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; } [...tabs.children].forEach((b) => { if (!b.classList.contains('anntoggle')) b.classList.toggle('active', b.textContent === active); }); renderStrip(); main.textContent = ''; views[active](); paintPins(); }
+  function sync() { if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; } [...tabs.children].forEach((b) => { if (!b.classList.contains('anntoggle')) b.classList.toggle('active', b.getAttribute('data-view') === active); }); renderStrip(); main.textContent = ''; views[active](); paintPins(); }
 
   // ── 视图一：流地图
   function renderMap() {
@@ -285,7 +384,7 @@ body.hidenotes .stage .notepin{display:none}
   // ── 视图：流程图（SVG 状态机；点节点 → 跳原型对应状态）
   const NS = 'http://www.w3.org/2000/svg';
   const sv = (tag, attrs, ...kids) => { const el = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs || {})) el.setAttribute(k, v); for (const kid of kids.flat()) if (kid) el.appendChild(kid); return el; };
-  const svText = (x, y, txt, cls) => { const t = sv('text', { x, y, class: cls || '' }); t.textContent = txt; return t; };
+  const svText = (x, y, txt, cls) => { const t = sv('text', { x, y, class: cls || '' }); t.textContent = T(txt); return t; };
   function buildFlowSvg(f) {
     {
       const states = (C.states || []).filter((s) => s.flowRef === f.id);
@@ -332,7 +431,7 @@ body.hidenotes .stage .notepin{display:none}
             lx = (x1 + x2) / 2; ly = yb + 4;
           }
         }
-        const edgeTitle = sv('title', {}); edgeTitle.textContent = t.id + '：' + (t.trigger || '') + (t.guard ? '〔guard: ' + t.guard + '〕' : '') + ' → ' + (t.result || '');
+        const edgeTitle = sv('title', {}); edgeTitle.textContent = T(t.id + '：' + (t.trigger || '') + (t.guard ? '〔guard: ' + t.guard + '〕' : '') + ' → ' + (t.result || ''));
         const pathEl = sv('path', { d, class: cls }); pathEl.appendChild(edgeTitle.cloneNode(true)); svg.appendChild(pathEl);
         const lbl = (t.trigger || t.id).slice(0, 12) + (t.guard ? '〔' + t.guard.slice(0, 8) + '…〕' : '');
         const txtEl = svText(lx - lbl.length * 4.6, ly, lbl, 'felabel' + (t.guard ? ' g' : ''));
@@ -669,7 +768,7 @@ body.hidenotes .stage .notepin{display:none}
   fab.addEventListener('click', () => { panel.classList.toggle('open'); refreshAnn(); });
   function refreshAnn() {
     const ds = drafts(); const ledgerAnns = L.annotations || [];
-    fab.textContent = ''; fab.appendChild(mkIcon(NOTE_D)); fab.appendChild(document.createTextNode('批注')); fab.appendChild(h('span', { class: 'cnt', text: String(ds.length + ledgerAnns.filter((a) => a.status === 'proposed').length) }));
+    fab.textContent = ''; fab.appendChild(mkIcon(NOTE_D)); fab.appendChild(document.createTextNode(T('批注'))); fab.appendChild(h('span', { class: 'cnt', text: String(ds.length + ledgerAnns.filter((a) => a.status === 'proposed').length) }));
     panel.textContent = '';
     const closeBtn = h('button', { class: 'chip', 'aria-label': '关闭批注面板', text: '关闭 ✕' }); closeBtn.addEventListener('click', () => panel.classList.remove('open'));
     panel.appendChild(h('h2', null, '批注', closeBtn));

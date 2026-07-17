@@ -1,11 +1,29 @@
 {
-  "description": "把回边 TR-err 变成无 guard 的 default 且 loopAllowed=false，default 路径成环永不达 terminal（FSM-03 可伴报）",
+  "description": "turn back-edge TR-err into a guard-less default with loopAllowed=false; the default path cycles and never reaches terminal (FSM-03 may accompany)",
   "base": "valid-typical.json",
-  "expect": ["FSM-05"],
+  "expect": [
+    "FSM-05"
+  ],
   "ops": [
-    { "op": "replace", "path": "/contract/transitions/1/isDefault", "value": false },
-    { "op": "replace", "path": "/contract/transitions/2/guard", "value": null },
-    { "op": "replace", "path": "/contract/transitions/2/isDefault", "value": true },
-    { "op": "replace", "path": "/contract/transitions/2/loopAllowed", "value": false }
+    {
+      "op": "replace",
+      "path": "/contract/transitions/1/isDefault",
+      "value": false
+    },
+    {
+      "op": "replace",
+      "path": "/contract/transitions/2/guard",
+      "value": null
+    },
+    {
+      "op": "replace",
+      "path": "/contract/transitions/2/isDefault",
+      "value": true
+    },
+    {
+      "op": "replace",
+      "path": "/contract/transitions/2/loopAllowed",
+      "value": false
+    }
   ]
 }

@@ -1,8 +1,22 @@
 {
-  "description": "重复 state id：ST-only 出现两次",
+  "description": "duplicate state id: ST-only appears twice",
   "base": "valid-minimal.json",
-  "expect": ["STR-04"],
+  "expect": [
+    "STR-04"
+  ],
   "ops": [
-    { "op": "add", "path": "/contract/states/-", "value": { "id": "ST-only", "flowRef": "FLOW-main", "name": "重复状态", "uiTemplateRef": "ui-ST-only", "figmaNote": "n/a", "entry": "none", "terminal": false } }
+    {
+      "op": "add",
+      "path": "/contract/states/-",
+      "value": {
+        "id": "ST-only",
+        "flowRef": "FLOW-main",
+        "name": "Duplicate state",
+        "uiTemplateRef": "ui-ST-only",
+        "figmaNote": "n/a",
+        "entry": "none",
+        "terminal": false
+      }
+    }
   ]
 }

@@ -1,8 +1,29 @@
 {
-  "description": "存在 open 的 blocker 型 issue，acceptance 不合法",
+  "description": "an open blocker-type issue exists, acceptance is invalid",
   "base": "valid-typical.json",
-  "expect": ["ACC-03"],
+  "expect": [
+    "ACC-03"
+  ],
   "ops": [
-    { "op": "add", "path": "/contract/issues/-", "value": { "id": "ISS-1", "type": "blocker", "question": "失败态的重试上限未裁决", "options": ["3 次", "无限"], "impact": "影响 TR-err 行为与验收", "status": "open", "decision": null, "affectedRefs": ["TR-err", "SCN-1"] } }
+    {
+      "op": "add",
+      "path": "/contract/issues/-",
+      "value": {
+        "id": "ISS-1",
+        "type": "blocker",
+        "question": "Retry limit for the failed state is unadjudicated",
+        "options": [
+          "3 times",
+          "unlimited"
+        ],
+        "impact": "Affects TR-err behavior and acceptance",
+        "status": "open",
+        "decision": null,
+        "affectedRefs": [
+          "TR-err",
+          "SCN-1"
+        ]
+      }
+    }
   ]
 }

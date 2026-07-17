@@ -1,72 +1,72 @@
 ---
 name: mini-app-spec
-description: 将复杂功能的多源需求（PRD/BDD/Figma/代码）生成、校准为单文件 HTML5 可执行规格，并在实现后对账。
+description: Generate and calibrate multi-source requirements (PRD/BDD/Figma/code) for complex features into a single-file executable HTML5 spec, then reconcile against it after implementation.
 disable-model-invocation: true
 ---
 
 # Mini-App Spec
 
-产出并维护一个自包含的 `mini-app-spec.html`：内嵌机器合同（SSOT）+ 可操作原型 + 状态机画布 + BDD 验收 + 批注评审 + 运行证据。它描述并核对目标实现，不替代实现、不在同一流程里写业务代码。
+Produce and maintain a self-contained `mini-app-spec.html`: an embedded machine contract (SSOT) + operable prototype + state-machine canvas + BDD acceptance + annotation review + run evidence. It describes and verifies the target implementation — it does not replace the implementation and never writes business code in the same workflow.
 
-**三层架构**：HTML 是数据库，`scripts/spec.mjs` 是唯一写入口（validator 挡门，校验不过写不进去），`assets/template.html` 是无状态渲染引擎（业务禁改，升级 = `save --retemplate`）。字段合同、revision 语义、状态代数、判定器、模板协议与 allowlist 的**唯一权威定义**在 `references/contract.md`——实现与争议一律以它为准，本文不复述。
+**Three-layer architecture**: the HTML is the database, `scripts/spec.mjs` is the only write path (the validator guards the gate — nothing that fails validation gets written), and `assets/template.html` is the stateless render engine (never modified for business needs; upgrading = `save --retemplate`). The **single authoritative definition** of the field contract, revision semantics, status algebra, judges, template protocol, and allowlist lives in `references/contract.md` — implementation and disputes always defer to it; this file does not restate it.
 
-**运行约定**：在仓库根目录执行 `node <本 skill 目录>/scripts/spec.mjs <命令> …`；**产物必须在 git 仓库内**（gate 回放锚 / recovery / 来源观测都依赖它）；业务产物固定放 `docs/mini-app-spec/<需求名>/mini-app-spec.html`（record-run 证据自动落同目录 `evidence/`，RUN 编号按 spec 独立，故每需求一个子目录、不摊平）；合同编辑走 extract→改 JSON→save 往返（payload 放临时目录），**永不手写 HTML 正文**。逐流对齐起每轮就绪后 `open` 给用户（macOS `open`；无头环境报告产物路径代替）；停点①的评审物是流清单与 issues（原型区为空是正常形态），可直接在聊天里呈现。
+**Operating conventions**: run `node <this skill dir>/scripts/spec.mjs <command> …` from the repo root; **the artifact must live inside a git repository** (the gate replay anchor, recovery, and source observation all depend on it); business artifacts always go to `docs/mini-app-spec/<requirement-name>/mini-app-spec.html` (record-run evidence lands in `evidence/` in the same directory automatically; RUN numbering is per-spec, hence one subdirectory per requirement — never flattened); contract edits go through the extract → edit JSON → save round-trip (put payloads in a temp directory), and **never hand-write the HTML body**. During per-flow alignment, `open` the artifact for the user at the end of each round once it is ready (macOS `open`; in headless environments report the artifact path instead); the review deliverable at Hard Stop ① is the flow list plus issues (an empty prototype area is the normal shape at that point) and can be presented directly in chat.
 
-## 防糊弄铁律（机械执行，不靠自觉）
+## Anti-cheating iron rules (mechanically enforced, not honor-system)
 
-1. 合同只准经 `save` 写入；绕过者被 envelope（ENV-01）与 `validate --against-git`（回放检测，锚=gate commit）抓住。
-2. 派生状态**只算不存**：手写 passed 直接报错，场景状态只能由证据推导。
-3. 验证由 record-run **亲跑**（agent 只提供命令不提供结果）；命令在 verification gate 冻结，行为语义（fingerprint）在流对齐时冻结——改了 Then 旧证据自动失效。
-4. acceptance 必须引用用户原话，且过六条硬前置（来源批次门、proposed 批注清零、非绿 core 场景逐条 waiver 等）。
+1. The contract may only be written via `save`; bypasses are caught by the envelope (ENV-01) and `validate --against-git` (replay detection, anchor = gate commit).
+2. Derived status is **computed, never stored**: hand-writing `passed` is an immediate error; scenario status can only be derived from evidence.
+3. Verification is **executed by record-run itself** (the agent supplies commands, never results); commands are frozen at the verification gate, and behavioral semantics (fingerprint) are frozen at flow alignment — change a Then and old evidence auto-invalidates.
+4. Acceptance must quote the user's verbatim words and pass six hard preconditions (source batch gate, zero proposed annotations, per-scenario waivers for every non-green core scenario, etc.).
 
-## 工作流（两个硬停点 + 逐流软停）
+## Workflow (two hard stops + per-flow soft stops)
 
-0. **Resume**：`spec.mjs status <html>` 一条命令出恢复简报。完成判据：能向用户复述「上次停在哪、下一步是什么」。
-1. **收集+建图 → 🛑停点①**：读需求/BDD/Figma(MCP)/代码，登记 sources → 拆 flows（垂直用户流+风险档+core 标志）。Qualify 是一句口头判断：无多状态/交互/验收对账就报不适用退出；**单点设计疑问（「这个交互什么手感」）让位 throwaway 原型探针**（环境装有 `/prototype` 之类的快速原型 skill 就用它，没有就临时页面探完即弃）——探针答案到手再回本 skill，其结论可登记为 source 或落 issue.decision；逐流期说不清的交互同理先探针定手感、再一次性落模板，不在合同里反复试错。完成判据：**用户回话确认流清单与分档**（流清单以 `alignStatus=pending` 落盘供确认是预期动作；「不拆流」指未确认前不逐流展开 states/scenarios）。确认后 `save --gate gate1` 打回放锚。
-2. **逐流对齐（软停）**：高不确定流一次一条，低风险 ≤3 条合批。填 states/transitions/scenarios/templates → `validate` 0 error 才 open 给用户评审。决策疑点做带倾向选择题（内置默认路径）；成串高影响决策可升级为审问式追问——环境装有 `grill-me` 之类的质询 skill 则调用，没有就用连串带倾向选择题退化执行；不接入寻路/导航类 skill。完成判据：该流用户回话通过 → alignStatus=aligned（冻结 fingerprint）并 `--gate` 打锚；**每条 core 流都 aligned** 才算本阶段完成。
-3. **实现**（本 skill 外部）。
-4. **对账 → 🛑停点②**：verification gate 冻结命令 → record-run 逐场景取证 → 先 `refresh-sources` 再向用户展示证据摘要（全绿只免逐项审阅，不免停点）→ 用户明确接受 → `accept`。完成判据：`accept` 成功写入并 `--gate` 打锚；失败则原样报出 validator 的未决清单，不粉饰。
+0. **Resume**: `spec.mjs status <html>` produces a recovery briefing in one command. Done when: you can tell the user "where we stopped last time and what comes next."
+1. **Collect + map → 🛑 Hard Stop ①**: read requirements/BDD/Figma (MCP)/code, register sources → decompose into flows (vertical user flows + risk tier + core flag). Qualification is a one-sentence judgment call: if there are no multiple states, no interactions, and no acceptance reconciliation, declare the skill inapplicable and exit. **Single-point design questions ("how should this interaction feel?") yield to a throwaway prototype probe** (use a rapid-prototyping skill like `/prototype` if one is installed; otherwise a disposable page — probe and discard) — once the probe has an answer, come back to this skill and register the conclusion as a source or an issue.decision. Interactions that resist description during per-flow alignment get the same treatment: probe the feel first, then land the template once — don't trial-and-error inside the contract. Done when: **the user confirms the flow list and tiering in their reply** (persisting the flow list with `alignStatus=pending` for confirmation is the expected move; "don't decompose flows" means no per-flow expansion of states/scenarios before confirmation). After confirmation, `save --gate gate1` stamps the replay anchor.
+2. **Per-flow alignment (soft stops)**: high-uncertainty flows one at a time; low-risk flows batched ≤3. Fill in states/transitions/scenarios/templates → only `open` for user review once `validate` reports 0 errors. Decision points become multiple-choice questions with a stated default; a string of high-impact decisions may escalate to interrogation-style questioning — use a grilling skill like `grill-me` if installed, otherwise degrade to a chain of leaning multiple-choice questions; do not pull in wayfinding/navigation-type skills. Done when: the user approves the flow in their reply → `alignStatus=aligned` (freezing the fingerprint) and `--gate` stamps an anchor; this phase completes only when **every core flow is aligned**.
+3. **Implementation** (outside this skill).
+4. **Reconciliation → 🛑 Hard Stop ②**: verification gate freezes commands → record-run collects evidence per scenario → run `refresh-sources` first, then show the user an evidence summary (all-green only waives item-by-item review, never the stop itself) → user explicitly accepts → `accept`. Done when: `accept` writes successfully and `--gate` stamps an anchor; on failure, report the validator's outstanding-items list verbatim — no sugar-coating.
 
-**变更回灌**：契约级改动走 save（changelog 自动留痕），行为变更把受影响流退回待对齐；小 UI/实现细节不回灌。修改是常态路径（extract→改→save），不是例外。
+**Change backfill**: contract-level changes go through save (the changelog keeps the trail automatically); behavioral changes send affected flows back to pending alignment; minor UI/implementation details don't backfill. Modification is the normal path (extract → edit → save), not the exception.
 
-## 模板质量铁律
+## Template quality iron rules
 
-> 各协议（`data-live`/`data-note`/`data-show-in`/`data-snap`/`metrics`/`demoPath`/`autoMs`…）的机制与 allowlist 以 contract.md §4/§8 为准；本节只定行为标准。
+> The mechanics and allowlist of each protocol (`data-live`/`data-note`/`data-show-in`/`data-snap`/`metrics`/`demoPath`/`autoMs`…) are defined in contract.md §4/§8; this section only sets the behavioral bar.
 
-- **活屏，不是幻灯片**：一条流的多状态用共享模板做成一块持久屏（区域显隐、控件值不丢、云端回调用自动转移模拟）。
-- **连续交互必须可操作**：滑竿拖出实时视觉反馈；**禁止按钮文字转述交互**（「模拟拖动」按钮=不合格）。
-- **讲解进画面**：关键区域打标注点、计量语义挂 metrics 徽标、核心场景配演示走查——评审者不读文档也能看懂。
-- 状态皮肤用引擎 mock 工具类（`.mcv/.layer/.optline/.opt/.gearrow/.gear/.cta/.ghost/.slabel`），暗色主题对齐被评审 App 的气质；模板零 JS、零外链。
-- 样式关键屏：Figma 指针（MCP 取数，故障硬停不猜）或 figmaNote 二选一；对账型 spec 可声明「视觉权威=现网实现」但须开 issue 交用户裁决。
-- 每个可评审对象有稳定短 ID、页面点击可复制（聊天反馈的坐标系）；批注**点击即锚**（开批注模式→点元素→钉留原地），不逼用户手选 ID。
-- **开源库政策**：CSP 禁外链；引擎可 inline vendor MIT/BSD 小库（单库 ≤15KB min，头注释记名称/版本/License），交互复杂度超出手写合理范围时优先 vendor 而非降级体验；禁 CDN 与重型框架。
+- **A live screen, not a slide deck**: a flow's multiple states share one persistent screen via a shared template (regions show/hide, control values survive, cloud callbacks are simulated with auto-transitions).
+- **Continuous interactions must be operable**: a slider drag produces real-time visual feedback; **buttons that narrate an interaction in text are forbidden** (a "simulate drag" button = failing grade).
+- **Put the explanation into the picture**: pin annotation markers on key regions, hang metrics badges on quantitative semantics, give core scenarios a demo walkthrough — a reviewer should understand it without reading any document.
+- Skin states with the engine's mock utility classes (`.mcv/.layer/.optline/.opt/.gearrow/.gear/.cta/.ghost/.slabel`); the dark theme should match the temperament of the app under review; templates contain zero JS and zero external links.
+- Style-critical screens: a Figma pointer (data via MCP; on failure hard-stop, never guess) or a figmaNote — one of the two is required; a reconciliation-type spec may declare "visual authority = the live implementation," but must open an issue for the user to adjudicate.
+- Every reviewable object has a stable short ID, click-to-copy on the page (the coordinate system for chat feedback); annotations are **click-to-anchor** (enter annotation mode → click an element → the pin stays put) — never force the user to pick IDs by hand.
+- **Open-source library policy**: CSP forbids external links; the engine may inline small vendored MIT/BSD libraries (≤15KB min each, header comment recording name/version/license). When interaction complexity exceeds what hand-written code can reasonably do, prefer vendoring over degrading the experience; CDNs and heavyweight frameworks are forbidden.
 
-## 批注回路
+## Annotation loop
 
-📌 批注锚定任意稳定 ID、可携带修改建议 proposal → 导出 JSON 即**结构化修改工单** → `merge-feedback` 合并为 proposed（**阻断 acceptance**）→ 用户逐条裁决：采纳 ⇒ agent 经 save 落合同并 `annotate --status resolved`；不采纳 ⇒ rejected，proposal 原文保留。同步零散意见走聊天说短 ID 即可，批注留给批量/异步/需闭环保证的评审。
+📌 An annotation anchors to any stable ID and may carry a change proposal → exporting JSON yields a **structured change ticket** → `merge-feedback` merges them as `proposed` (**which blocks acceptance**) → the user adjudicates one by one: adopted ⇒ the agent lands it in the contract via save and runs `annotate --status resolved`; declined ⇒ `rejected`, the proposal text preserved verbatim. For scattered synchronous feedback, just say the short ID in chat; reserve annotations for batch/async reviews or when a closed loop must be guaranteed.
 
-**评审直通车**：`review` 起本地会话（回环地址、产物零改写）——用户页内批注后点「Submit to agent」，命令即返回队列文件路径接 `merge-feedback`，免导出免复制。前台阻塞等待（Bash 侧给足 timeout）；被杀/超时**重跑即可，已提交队列落盘不丢**；用户点「Send & End」= 会话结束，未经邀请不重开。
+**Review express lane**: `review` starts a local session (loopback address, zero rewriting of the artifact) — the user annotates in-page and clicks "Submit to agent"; the command returns the queue file path, which feeds straight into `merge-feedback` — no export, no copy-paste. It blocks in the foreground (give the Bash call a generous timeout); if killed or timed out, **just rerun — submitted queues are persisted and never lost**; the user clicking "Send & End" = session over; do not reopen uninvited.
 
-## 命令速查（语义详见 contract.md）
+## Command quick reference (semantics in contract.md)
 
-| 命令 | 用途 |
+| Command | Purpose |
 |---|---|
-| `new <html> --id --title` | 从固定引擎创建空产物 |
-| `extract` / `save --data [--expect-revision] [--gate 名] [--retemplate]` | 合同进出的唯一写路径；gate 顺带 git commit（回放锚） |
-| `validate [--strict] [--against-git]` | 全规则校验；open/accept 前必须 0 error |
-| `status` | 只读恢复简报（五元组永不折叠） |
-| `confirm-command --scenario --command` | verification gate：冻结验证命令 |
-| `record-run --scenario [db 场景须设备三参]` | 亲跑取证（判定器 assert/db/file/grep） |
-| `refresh-sources` | 生成完整来源观测批次（acceptance/对账前强制）；file adapter 先行——远程来源（Figma/Confluence）观测为 unavailable，验收时须逐来源 sourceWaiver |
-| `review [--timeout ms] [--port n] [--no-open]` | 本地评审会话：浏览器批注一键直达 agent（阻塞至提交，落盘 feedback-N.json） |
-| `merge-feedback --data` / `annotate --id --status` | 批注工单合并 / 代录用户裁决 |
-| `accept --verbatim "用户原话"` | 写 acceptance 事实（硬前置由 validator 挡门） |
-| `progress [--stage] [--next] [--worth-it] [--current-flow]` | 写进度/自评块（非可信块，不动 revision——收尾 worthIt 用它，别手改 HTML） |
-| `recovery --reason` | 从最近 gate commit 可信基线重建 |
-| `export-md [--out]` | 降级导出便携 Markdown（权威仍是 HTML） |
+| `new <html> --id --title` | Create an empty artifact from the fixed engine |
+| `extract` / `save --data [--expect-revision] [--gate name] [--retemplate]` | The only write path in/out of the contract; gate also makes a git commit (replay anchor) |
+| `validate [--strict] [--against-git]` | Full rule validation; must be 0 errors before open/accept |
+| `status` | Read-only recovery briefing (the five-tuple is never collapsed) |
+| `confirm-command --scenario --command` | Verification gate: freeze the verification command |
+| `record-run --scenario [db scenarios require the three device params]` | Evidence collection executed by the tool itself (judges: assert/db/file/grep) |
+| `refresh-sources` | Generate a complete source-observation batch (mandatory before acceptance/reconciliation); file adapter first — remote sources (Figma/Confluence) observe as `unavailable` and need a per-source sourceWaiver at acceptance |
+| `review [--timeout ms] [--port n] [--no-open]` | Local review session: in-browser annotations reach the agent in one click (blocks until submit; persists feedback-N.json) |
+| `merge-feedback --data` / `annotate --id --status` | Merge annotation tickets / record the user's adjudication |
+| `accept --verbatim "user's exact words"` | Write the acceptance fact (hard preconditions enforced by the validator) |
+| `progress [--stage] [--next] [--worth-it] [--current-flow]` | Write the progress/self-review block (untrusted block, doesn't bump revision — use it for the closing worthIt, never hand-edit the HTML) |
+| `recovery --reason` | Rebuild from the trusted baseline at the latest gate commit |
+| `export-md [--out]` | Degraded export to portable Markdown (the HTML stays authoritative) |
 
-## 自检与存活
+## Self-check and survival
 
-- 改 `spec.mjs`/`template.html` 后必须跑 `node scripts/run-fixtures.mjs` 与 `node scripts/run-injections.mjs`，**双双全绿**才算改完。
-- 每次运行结束用 `progress --worth-it` 写一行「本次值不值 + 实际分钟数」（收尾写入，在 gate 之后合法——against-git 只要求链连续）。
-- **远程来源先快照**：Confluence/Jira 等远端 PRD 先落地为产物旁 `sources/` 下的本地文件、以快照路径登记 locator（原始 URL 写进 role/version）——file adapter 可观测、证据可核，远端原文变更由重新快照 + refresh-sources 显形。死刑条款：连续两次真实需求绕开本 skill 或自评为亏 → 砍当次最贵环节；再犯退役本 skill。
+- After changing `spec.mjs`/`template.html`, you must run `node scripts/run-fixtures.mjs` and `node scripts/run-injections.mjs`; the change counts as done only when **both are fully green**.
+- At the end of every run, write one line via `progress --worth-it`: "was this run worth it + actual minutes" (written at wrap-up, legal after the gate — against-git only requires chain continuity).
+- **Snapshot remote sources first**: land remote PRDs (Confluence/Jira, etc.) as local files under `sources/` next to the artifact and register the locator with the snapshot path (put the original URL in role/version) — the file adapter can observe them and evidence stays verifiable; upstream drift is surfaced by re-snapshot + refresh-sources. Death clause: two consecutive real requirements that bypass this skill, or two self-assessed net losses → cut the most expensive step of that run; a repeat offense retires this skill.

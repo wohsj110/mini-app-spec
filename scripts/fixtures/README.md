@@ -1,39 +1,39 @@
 # Validator Fixtures
 
-规则编号见 `references/contract.md` §11。fixture 覆盖 contract+ledger 层规则；TPL 规则用 HTML 片段 fixture；GIT-01/02 用临时 git 仓库 + fixture gate commit 在测试装置中构造（contract.md [N-11]）。
+Rule codes are defined in `references/contract.md` §11. Fixtures cover contract+ledger-level rules; TPL rules use HTML-snippet fixtures; GIT-01/02 are constructed in the test harness with a temporary git repo + fixture gate commits (contract.md [N-11]).
 
-## 格式约定
+## Format conventions
 
-- **好例**：完整 `{specVersion, contract, ledger}` JSON。fingerprint/hash 字段为占位值（`fp1:demo…`），结构校验不验其算值；算值一致性属状态推导，由 D3 的推导测试另测。
-- **坏例**：`bad-*.json`，格式 `{description, base, expect, ops}`——`ops` 为 RFC6902 JSON-Patch，应用于 `base` 后送 validator；`expect` = validator **至少必须报告**的规则码（允许伴随其他码，如 FSM-05 常伴 FSM-03）。
-- 测试装置流程：读 base → 应用 ops → validate → 断言 expect ⊆ 实际报告码集。
+- **Good cases**: complete `{specVersion, contract, ledger}` JSON. Fingerprint/hash fields hold placeholder values (`fp1:demo…`); structural validation does not verify their computed values — value consistency belongs to status derivation and is tested separately by the D3 derivation tests.
+- **Bad cases**: `bad-*.json`, format `{description, base, expect, ops}` — `ops` is an RFC6902 JSON-Patch applied to `base` before sending to the validator; `expect` = the rule codes the validator **must at least report** (other codes may accompany them, e.g. FSM-05 often comes with FSM-03).
+- Harness flow: read base → apply ops → validate → assert expect ⊆ the actually reported code set.
 
-## 清单
+## Catalog
 
-| 文件 | base | expect | 说明 |
+| File | base | expect | Description |
 |---|---|---|---|
-| valid-minimal.json | — | 0 error | 最小合法：单流单状态（entry+terminal），manual 场景 |
-| valid-typical.json | — | 0 error | 双状态链+守卫回边、assert 场景+examples、passed run、完整 refresh 批次+合法 acceptance |
-| bad-str04-duplicate-id.json | minimal | STR-04 | 重复 state id |
-| bad-ref01-dangling.json | minimal | REF-01 | stateRefs 引用幽灵状态 |
-| bad-fsm01-no-entry.json | minimal | FSM-01 | 全 flow 无 entry 状态 |
-| bad-fsm02-unreachable.json | typical | FSM-02 | 不可达孤儿状态 |
-| bad-fsm04-double-default.json | typical | FSM-04 | 同状态两条无 guard 出边均 isDefault |
-| bad-fsm05-loop-default.json | typical | FSM-05 | default 路径成环且未标 loopAllowed（FSM-03 可伴报） |
-| bad-alg01-derived-stored.json | minimal | ALG-01 | scenario 落盘手写 status:"passed" |
-| bad-alg02-uncovered.json | minimal | ALG-02 | behavior 需求无场景无 waiver |
-| bad-alg03-waiver.json | minimal | ALG-03 | waiver 缺 authority/approvedAt |
-| bad-alg04-passed-no-evidence.json | typical | ALG-04 | passed run 证据为空 |
-| bad-alg05-testcount.json | typical | ALG-05 | assert run testCount=0 |
-| bad-led01-db-context.json | typical | LED-01 | db 场景 run 缺设备上下文 |
-| bad-led02-no-fingerprint.json | typical | LED-02 | run 缺 scenarioFingerprint |
-| bad-acc01-stale-batch.json | typical | ACC-01 | acceptance 引用旧 refresh 批次 |
-| bad-acc02-unavailable.json | typical | ACC-02 | 批次含 unavailable 来源且无 sourceWaiver |
-| bad-acc03-open-blocker.json | typical | ACC-03 | 存在 open blocker 仍有 acceptance |
-| bad-tpl01-script.html | — | TPL-01 | template 内含 `<script>` |
-| bad-tpl02-datago.html | typical | TPL-02 | data-go 指向 from≠所属 state 的 transition |
+| valid-minimal.json | — | 0 error | Minimal legal spec: one flow, one state (entry+terminal), manual scenario |
+| valid-typical.json | — | 0 error | Two-state chain + guarded back-edge, assert scenario + examples, passed run, complete refresh batch + valid acceptance |
+| bad-str04-duplicate-id.json | minimal | STR-04 | Duplicate state id |
+| bad-ref01-dangling.json | minimal | REF-01 | stateRefs references a ghost state |
+| bad-fsm01-no-entry.json | minimal | FSM-01 | Flow has no entry state |
+| bad-fsm02-unreachable.json | typical | FSM-02 | Unreachable orphan state |
+| bad-fsm04-double-default.json | typical | FSM-04 | Two guard-less out-edges of one state both isDefault |
+| bad-fsm05-loop-default.json | typical | FSM-05 | Default path forms a cycle without loopAllowed (FSM-03 may accompany) |
+| bad-alg01-derived-stored.json | minimal | ALG-01 | Scenario persists a hand-written status:"passed" |
+| bad-alg02-uncovered.json | minimal | ALG-02 | Behavior requirement with no scenarios and no waiver |
+| bad-alg03-waiver.json | minimal | ALG-03 | Waiver missing authority/approvedAt |
+| bad-alg04-passed-no-evidence.json | typical | ALG-04 | Passed run with empty evidence |
+| bad-alg05-testcount.json | typical | ALG-05 | Assert run with testCount=0 |
+| bad-led01-db-context.json | typical | LED-01 | db-scenario run missing device context |
+| bad-led02-no-fingerprint.json | typical | LED-02 | Run missing scenarioFingerprint |
+| bad-acc01-stale-batch.json | typical | ACC-01 | Acceptance references a stale refresh batch |
+| bad-acc02-unavailable.json | typical | ACC-02 | Batch contains an unavailable source with no sourceWaiver |
+| bad-acc03-open-blocker.json | typical | ACC-03 | Acceptance exists while an open blocker remains |
+| bad-tpl01-script.html | — | TPL-01 | Template contains `<script>` |
+| bad-tpl02-datago.html | typical | TPL-02 | data-go points to a transition whose from ∉ the owning states |
 
-## 运行
+## Running
 
-- `node scripts/run-fixtures.mjs` — 本目录 fixtures 验收（validateData/validateTemplates）。
-- `node scripts/run-injections.mjs` — 第一阶段故障注入四组（完整性/事务/防假绿/生命周期），在临时 git 仓库全自动执行，覆盖 GIT-01/02、ENV-01、CAS/锁、record-run 判定器、fingerprint 失效/复原、来源门与 acceptance、retemplate 零丢失。
+- `node scripts/run-fixtures.mjs` — acceptance of the fixtures in this directory (validateData/validateTemplates).
+- `node scripts/run-injections.mjs` — phase-one fault injection, four groups (integrity / transaction / anti-fake-green / lifecycle), fully automated in a temporary git repo; covers GIT-01/02, ENV-01, CAS/locking, the record-run judges, fingerprint invalidation/restoration, the source gate and acceptance, and zero-loss retemplate.

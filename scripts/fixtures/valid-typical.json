@@ -3,7 +3,7 @@
   "contract": {
     "meta": {
       "id": "FEAT-demo-typ",
-      "title": "典型合法样例"
+      "title": "Typical valid sample"
     },
     "sources": [
       {
@@ -11,20 +11,20 @@
         "kind": "doc",
         "locator": "docs/demo.md",
         "version": "3",
-        "role": "目标与范围"
+        "role": "goals and scope"
       },
       {
         "id": "SRC-fig",
         "kind": "figma",
         "locator": "figma://FILE/node/12:34",
         "version": "v7",
-        "role": "视觉与交互"
+        "role": "visuals and interaction"
       }
     ],
     "flows": [
       {
         "id": "FLOW-a",
-        "title": "处理并展示结果",
+        "title": "Process and show the result",
         "priority": "core",
         "risk": "high",
         "core": true,
@@ -40,7 +40,7 @@
       {
         "id": "ST-a",
         "flowRef": "FLOW-a",
-        "name": "开始",
+        "name": "Start",
         "uiTemplateRef": "ui-ST-a",
         "figma": {
           "fileKey": "FILE",
@@ -53,16 +53,16 @@
       {
         "id": "ST-b",
         "flowRef": "FLOW-a",
-        "name": "处理中",
+        "name": "Processing",
         "uiTemplateRef": "ui-ST-b",
-        "figmaNote": "loading 态无图",
+        "figmaNote": "loading state has no design ref",
         "entry": "none",
         "terminal": false
       },
       {
         "id": "ST-c",
         "flowRef": "FLOW-a",
-        "name": "结果",
+        "name": "Result",
         "uiTemplateRef": "ui-ST-c",
         "figma": {
           "fileKey": "FILE",
@@ -79,8 +79,8 @@
         "flowRef": "FLOW-a",
         "from": "ST-a",
         "to": "ST-b",
-        "trigger": "点击开始",
-        "result": "进入处理",
+        "trigger": "click start",
+        "result": "enter processing",
         "isDefault": true,
         "guard": null,
         "scenarioRefs": [
@@ -92,8 +92,8 @@
         "flowRef": "FLOW-a",
         "from": "ST-b",
         "to": "ST-c",
-        "trigger": "处理完成",
-        "result": "展示结果",
+        "trigger": "processing done",
+        "result": "show the result",
         "isDefault": true,
         "guard": null,
         "scenarioRefs": [
@@ -105,10 +105,10 @@
         "flowRef": "FLOW-a",
         "from": "ST-b",
         "to": "ST-a",
-        "trigger": "失败重试",
-        "result": "回到开始",
+        "trigger": "retry after failure",
+        "result": "back to start",
         "isDefault": false,
-        "guard": "处理失败",
+        "guard": "Processing failed",
         "loopAllowed": true,
         "scenarioRefs": []
       }
@@ -116,7 +116,7 @@
     "requirements": [
       {
         "id": "REQ-1",
-        "text": "用户发起处理后能看到结果",
+        "text": "After the user starts processing they can see the result",
         "kind": "behavior",
         "sourceRefs": [
           "SRC-doc"
@@ -137,23 +137,23 @@
           "ST-c"
         ],
         "given": [
-          "已进入开始屏"
+          "on the start screen"
         ],
-        "when": "点击开始并等待完成",
+        "when": "click start and wait for completion",
         "then": [
-          "结果屏展示处理结果"
+          "The result screen shows the processing result"
         ],
         "examples": [
           {
             "id": "EX-1",
             "values": {
-              "输入": "标准"
+              "input": "standard"
             }
           },
           {
             "id": "EX-2",
             "values": {
-              "输入": "边界"
+              "input": "boundary"
             }
           }
         ],
@@ -180,7 +180,7 @@
       {
         "id": "RUN-1",
         "scenarioRef": "SCN-1",
-        "scenarioFingerprint": "fp1:9c57b54ececf5b64d2b73198dc83fc2f32be99a20ac0dc2cf29c9052521885c7",
+        "scenarioFingerprint": "fp1:93eaadeef3ae69f3284e643a64cb665449b6149162f1dc4e4b234bdecfe0a316",
         "verificationHash": "vh1:b3b81955f09164b96301ab1470417e7d8bb029197a4b2bcaaeb7b4b7e8c7ce9d",
         "exampleResults": [
           {
@@ -220,7 +220,7 @@
       {
         "id": "ACC-1",
         "at": "2026-07-16T12:00:00+08:00",
-        "verbatim": "验收通过，接受",
+        "verbatim": "Acceptance passed, accepted",
         "revision": 4,
         "sourceBatchId": "BATCH-1",
         "sourceWaivers": [],

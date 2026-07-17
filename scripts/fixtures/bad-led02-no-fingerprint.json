@@ -1,8 +1,13 @@
 {
-  "description": "run 缺 scenarioFingerprint",
+  "description": "run missing scenarioFingerprint",
   "base": "valid-typical.json",
-  "expect": ["LED-02"],
+  "expect": [
+    "LED-02"
+  ],
   "ops": [
-    { "op": "remove", "path": "/ledger/runs/0/scenarioFingerprint" }
+    {
+      "op": "remove",
+      "path": "/ledger/runs/0/scenarioFingerprint"
+    }
   ]
 }

@@ -1,10 +1,24 @@
 {
-  "description": "批次内 SRC-fig 观测为 unavailable（figma 401），acceptance 无对应 sourceWaiver",
+  "description": "SRC-fig observed as unavailable in the batch (figma 401), acceptance has no matching sourceWaiver",
   "base": "valid-typical.json",
-  "expect": ["ACC-02"],
+  "expect": [
+    "ACC-02"
+  ],
   "ops": [
-    { "op": "replace", "path": "/ledger/sourceObservations/1/outcome", "value": "unavailable" },
-    { "op": "replace", "path": "/ledger/sourceObservations/1/observedHash", "value": null },
-    { "op": "add", "path": "/ledger/sourceObservations/1/unavailableReason", "value": "figma API 401" }
+    {
+      "op": "replace",
+      "path": "/ledger/sourceObservations/1/outcome",
+      "value": "unavailable"
+    },
+    {
+      "op": "replace",
+      "path": "/ledger/sourceObservations/1/observedHash",
+      "value": null
+    },
+    {
+      "op": "add",
+      "path": "/ledger/sourceObservations/1/unavailableReason",
+      "value": "figma API 401"
+    }
   ]
 }

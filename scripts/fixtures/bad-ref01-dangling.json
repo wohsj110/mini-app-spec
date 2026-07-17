@@ -1,8 +1,17 @@
 {
-  "description": "flow.stateRefs 引用不存在的 ST-ghost",
+  "description": "flow.stateRefs references the nonexistent ST-ghost",
   "base": "valid-minimal.json",
-  "expect": ["REF-01"],
+  "expect": [
+    "REF-01"
+  ],
   "ops": [
-    { "op": "replace", "path": "/contract/flows/0/stateRefs", "value": ["ST-only", "ST-ghost"] }
+    {
+      "op": "replace",
+      "path": "/contract/flows/0/stateRefs",
+      "value": [
+        "ST-only",
+        "ST-ghost"
+      ]
+    }
   ]
 }

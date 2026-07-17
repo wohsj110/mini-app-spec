@@ -1,34 +1,93 @@
 {
   "specVersion": 1,
   "contract": {
-    "meta": { "id": "FEAT-demo-min", "title": "最小合法样例" },
+    "meta": {
+      "id": "FEAT-demo-min",
+      "title": "Minimal valid sample"
+    },
     "sources": [
-      { "id": "SRC-doc", "kind": "doc", "locator": "docs/demo.md", "version": "1", "role": "目标与范围" }
+      {
+        "id": "SRC-doc",
+        "kind": "doc",
+        "locator": "docs/demo.md",
+        "version": "1",
+        "role": "goals and scope"
+      }
     ],
     "flows": [
-      { "id": "FLOW-main", "title": "主流程", "priority": "core", "risk": "low", "core": true, "alignStatus": "aligned", "stateRefs": ["ST-only"] }
+      {
+        "id": "FLOW-main",
+        "title": "Main flow",
+        "priority": "core",
+        "risk": "low",
+        "core": true,
+        "alignStatus": "aligned",
+        "stateRefs": [
+          "ST-only"
+        ]
+      }
     ],
     "states": [
-      { "id": "ST-only", "flowRef": "FLOW-main", "name": "唯一状态", "uiTemplateRef": "ui-ST-only", "figmaNote": "纯文字屏，无设计稿", "entry": "default", "terminal": true }
+      {
+        "id": "ST-only",
+        "flowRef": "FLOW-main",
+        "name": "Only state",
+        "uiTemplateRef": "ui-ST-only",
+        "figmaNote": "text-only screen, no design mock",
+        "entry": "default",
+        "terminal": true
+      }
     ],
     "transitions": [],
     "requirements": [
-      { "id": "REQ-1", "text": "用户能看到结果", "kind": "behavior", "sourceRefs": ["SRC-doc"], "excerptRef": null, "scenarioRefs": ["SCN-1"], "waiver": null }
+      {
+        "id": "REQ-1",
+        "text": "the user can see the result",
+        "kind": "behavior",
+        "sourceRefs": [
+          "SRC-doc"
+        ],
+        "excerptRef": null,
+        "scenarioRefs": [
+          "SCN-1"
+        ],
+        "waiver": null
+      }
     ],
     "scenarios": [
       {
-        "id": "SCN-1", "flowRef": "FLOW-main",
-        "given": ["已打开页面"], "when": "查看结果", "then": ["结果可见"],
+        "id": "SCN-1",
+        "flowRef": "FLOW-main",
+        "given": [
+          "the page is open"
+        ],
+        "when": "view the result",
+        "then": [
+          "result visible"
+        ],
         "examples": [],
         "verification": {
           "kind": "manual",
-          "assertion": { "predicate": "用户确认结果可见" },
-          "evidencePolicy": { "required": "user-confirmation" },
-          "command": null, "commandHash": null, "commandConfirmedAt": null
+          "assertion": {
+            "predicate": "user confirms the result is visible"
+          },
+          "evidencePolicy": {
+            "required": "user-confirmation"
+          },
+          "command": null,
+          "commandHash": null,
+          "commandConfirmedAt": null
         }
       }
     ],
     "issues": []
   },
-  "ledger": { "runs": [], "acceptances": [], "sourceObservations": [], "annotations": [], "recoveries": [], "changelog": [] }
+  "ledger": {
+    "runs": [],
+    "acceptances": [],
+    "sourceObservations": [],
+    "annotations": [],
+    "recoveries": [],
+    "changelog": []
+  }
 }

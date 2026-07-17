@@ -1,8 +1,14 @@
 {
-  "description": "assert 类 run 的 testCount=0（零测试匹配不得算绿）",
+  "description": "assert-kind run with testCount=0 (zero matched tests must not count as green)",
   "base": "valid-typical.json",
-  "expect": ["ALG-05"],
+  "expect": [
+    "ALG-05"
+  ],
   "ops": [
-    { "op": "replace", "path": "/ledger/runs/0/testCount", "value": 0 }
+    {
+      "op": "replace",
+      "path": "/ledger/runs/0/testCount",
+      "value": 0
+    }
   ]
 }

@@ -1,9 +1,21 @@
 {
-  "description": "waiver 缺 authority/approvedAt",
+  "description": "waiver missing authority/approvedAt",
   "base": "valid-minimal.json",
-  "expect": ["ALG-03"],
+  "expect": [
+    "ALG-03"
+  ],
   "ops": [
-    { "op": "replace", "path": "/contract/requirements/0/scenarioRefs", "value": [] },
-    { "op": "replace", "path": "/contract/requirements/0/waiver", "value": { "reason": "纯文案变更无行为" } }
+    {
+      "op": "replace",
+      "path": "/contract/requirements/0/scenarioRefs",
+      "value": []
+    },
+    {
+      "op": "replace",
+      "path": "/contract/requirements/0/waiver",
+      "value": {
+        "reason": "copy-only change, no behavior"
+      }
+    }
   ]
 }

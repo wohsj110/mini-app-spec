@@ -1,17 +1,17 @@
-# 导出设置：水印开关
+# Export settings: watermark toggle
 
-## 背景
+## Background
 
-用户反馈导出图片强制带 App 水印，专业用户交付客户时需要无水印出图。
+Users report that exported images are forcibly stamped with the app watermark; professional users need watermark-free exports when delivering to clients.
 
-## 需求
+## Requirements
 
-1. 「导出设置」页新增「导出水印」开关，默认开。
-2. 开关关闭后，导出的图片不再叠加水印；开启则维持现状。
-3. 开关状态跨会话记住（杀进程重开 App 后保持上次选择）。
-4. 设计稿暂无，视觉沿用导出设置页现有开关样式。
+1. Add an "Export watermark" toggle to the "Export settings" page, default on.
+2. With the toggle off, exported images no longer get the watermark overlay; on keeps the current behavior.
+3. The toggle state is remembered across sessions (kill the process, reopen the app, last choice persists).
+4. No design mock yet; visuals follow the existing toggle style on the export settings page.
 
-## 验收口径
+## Acceptance criteria
 
-- 关闭开关导出 → 成品图无水印。
-- 重启 App → 开关保持上次选择。
+- Export with the toggle off → the final image has no watermark.
+- Restart the app → the toggle keeps the last choice.
